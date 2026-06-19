@@ -65,13 +65,22 @@ export function renderSidebar(state) {
     state.missed.length === 0
       ? "<li>なし</li>"
       : state.missed.map((m) => `<li>${m}</li>`).join("");
+
+  const eventsEl = document.getElementById("events-list");
+  if (eventsEl) {
+    const events = [];
+    if (state.flags.ev04_done) events.push("忘れられる権利");
+    if (state.flags.cov_childChoice || state.flags.cov_exitImmediate) events.push("出発憲章試行");
+    eventsEl.innerHTML =
+      events.length === 0 ? "<li>なし</li>" : events.map((e) => `<li>${e}</li>`).join("");
+  }
 }
 
 export function renderScene({ chapter, title, body, choices = [], mood, art, titleScreen = false, speaker }) {
   showNarrative();
   if (mood) applyMood(mood);
   renderSceneHero(art || "title");
-  renderSpeakerStrip(speaker);
+  renderSpeakerStrip(titleScreen ? null : speaker);
 
   const panel = narrativePanel();
   panel.classList.toggle("title-screen", titleScreen);

@@ -734,6 +734,14 @@ body { overflow-x: hidden; }
   font-size: 0.68rem;
 }
 
+.event-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: var(--accent-gold);
+  margin-left: 0.35rem;
+}
+
 .vow-active { color: var(--text-secondary); }
 
 .footer {

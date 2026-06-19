@@ -89,6 +89,10 @@ function buildSummary(outcomes, tension, state) {
     parts.push("アトリエから持ち込まれた「約束と記憶」の争いが、船団憲章の議論にも波及している。");
   }
 
+  if (state.flags.ev04_done) {
+    parts.push("パリンプセストの記憶特区で培われた「削除と匿名化の隙間」が、憲章起草の論点になっている。");
+  }
+
   return parts.join("");
 }
 

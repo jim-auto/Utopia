@@ -19,6 +19,11 @@ import { miniPortrait } from "./portraits.js";
 import { initAmbience, setMood } from "./visuals.js";
 import { initAudio, bindAudioToggle } from "./audio.js";
 import { simulateFiveYears } from "./covenant-sim.js";
+import {
+  buildClauseForm,
+  simulateEvent04,
+  getDeliberationExtraReason,
+} from "./covenant-event-04.js";
 
 const scenes = {};
 
@@ -38,6 +43,7 @@ export function createGame() {
     renderRefusalPicker,
     renderPresence,
     renderCovenant,
+    renderEvent04Covenant,
     renderDeliberation,
     renderEndingPicker,
     renderEpilogue: () => renderEpilogue(game),
@@ -178,6 +184,39 @@ export function createGame() {
     });
   }
 
+  function renderEvent04Covenant() {
+    const selected = new Set(["personalErase", "thirdPartyBan"]);
+
+    renderSystem({
+      title: "コヴナント事件 #04 — 忘れられる権利",
+      desc: "記憶保存 × 個人の忘却 × 歴史の連続。正解はない。",
+      systemId: "covenant",
+      contentHtml: `<div id="event04-form">${buildClauseForm(selected)}</div>`,
+      actions: [
+        {
+          label: "特区で試行を開始する（3年後に再訪）",
+          action: () => {
+            document.querySelectorAll("#event04-form input").forEach((input) => {
+              if (input.checked) state.flags[`ev04_${input.dataset.key}`] = true;
+            });
+            state.flags.ev04_done = true;
+            state.event04Sim = simulateEvent04(state);
+            if (state.flags.ev04_personalErase) bumpTrust(state, "sen", 1);
+            go("event04_revisit");
+          },
+        },
+      ],
+    });
+
+    document.getElementById("system-content").addEventListener("change", (e) => {
+      if (e.target.type === "checkbox") {
+        const key = e.target.dataset.key;
+        if (e.target.checked) selected.add(key);
+        else selected.delete(key);
+      }
+    });
+  }
+
   function renderCovenant() {
     const clauses = [
       {
@@ -292,6 +331,11 @@ export function createGame() {
       },
     ];
 
+    if (state.flags.ev04_done) {
+      const extra = getDeliberationExtraReason();
+      reasons.push({ ...extra, id: "lin" });
+    }
+
     const picked = new Set();
 
     function refresh() {
@@ -315,6 +359,7 @@ export function createGame() {
           <span class="tag ${picked.size >= 2 ? "active" : ""}">退出権の保障</span>
           <span class="tag ${picked.has("child") ? "active" : ""}">未来人の再選択</span>
           <span class="tag ${picked.has("sen") ? "active" : ""}">異議の記録</span>
+          ${state.flags.ev04_done ? `<span class="tag ${picked.has("lin") ? "active" : ""}">記憶の隙間</span>` : ""}
         </div>
       `;
       document.getElementById("system-content").innerHTML = html;

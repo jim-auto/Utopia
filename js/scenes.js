@@ -1,9 +1,13 @@
 import { ENDINGS, REFUSALS } from "./state.js";
 import { say } from "./portraits.js";
 import { renderOutcomeCards, getFeaturedQuote } from "./covenant-sim.js";
+import {
+  renderOutcomeCards as renderEvent04Cards,
+  getFeaturedQuote as getEvent04Quote,
+} from "./covenant-event-04.js";
 
 export function getSceneHandlers(game) {
-  const { state, go, renderRefusalPicker, renderPresence, renderCovenant, renderDeliberation, renderEndingPicker, renderEpilogue } = game;
+  const { state, go, renderRefusalPicker, renderPresence, renderCovenant, renderEvent04Covenant, renderDeliberation, renderEndingPicker, renderEpilogue } = game;
 
   return {
     title: () =>
@@ -231,8 +235,73 @@ export function getSceneHandlers(game) {
         mood: "law",
         art: "covenant",
         speaker: "child",
-        choices: [{ label: "コヴナント・グラマー — 制度を試作する", action: () => renderCovenant() }],
+        choices: [
+          {
+            label: "パリンプセスト — 忘れられる権利（事件 #04）",
+            hint: "記憶の削除と歴史の連続が衝突する試験",
+            action: () => go("event04_intro"),
+          },
+          {
+            label: "ホライズン — 出発憲章の試行（事件 #03）",
+            hint: "未来人の同意を制度として組む",
+            action: () => renderCovenant(),
+          },
+        ],
       }),
+
+    event04_intro: () =>
+      go({
+        chapter: "第三章",
+        title: "忘れられる権利",
+        body: `
+          <p>月・パリンプセスト。記録の海は、人類のすべてに近い。ここでは「忘れる権利」と「歴史を残す義務」が毎日衝突する。</p>
+          ${state.refusal === "memory" ? "<p>あなたはかつて<strong>記憶の編集</strong>を拒んだ。今、他者の忘れを制度で守る立場に立っている。</p>" : ""}
+          ${say("sen", "本人が望むなら、痛みの記憶は消せるべきだ。ただし、消したこと自体を歴史から消すことはできない。")}
+          ${say("lin", "年表に穴が開くたび、未来は盲目的になる。匿名化なら、まだ連続性は保てる。")}
+          <p>センとリンのあいだで、特区の試行が始まろうとしている。あなたは条項を提案できる。</p>
+        `,
+        period: 3,
+        location: "パリンプセスト",
+        mood: "memory",
+        art: "palimpsest",
+        speaker: "sen",
+        choices: [
+          {
+            label: "コヴナント・グラマー — 記憶特区の条項を組む",
+            action: () => renderEvent04Covenant(),
+          },
+        ],
+      }),
+
+    event04_revisit: () => {
+      const sim = state.event04Sim || { summary: "", outcomes: [], tension: "medium" };
+      const quote = getEvent04Quote(sim);
+      go({
+        chapter: "第三章",
+        title: "忘れられる権利 — 三年後",
+        body: `
+          <p class="sim-lead">${sim.summary}</p>
+          ${renderEvent04Cards(sim.outcomes)}
+          <p>削除、匿名化、再記録の禁止——条項は実行されたが、人々は<strong>解釈</strong>し、<strong>回避記録</strong>という抜け道を invent した。</p>
+          ${quote ? say(quote.npc, quote.quote) : ""}
+          <p>パリンプセストでの経験は、これから起草する出発憲章にも影響を与えるだろう。</p>
+        `,
+        period: 3,
+        location: "パリンプセスト",
+        mood: sim.tension === "high" ? "vow" : "memory",
+        art: "palimpsest",
+        speaker: quote?.npc,
+        choices: [
+          {
+            label: "ホライズンへ — 出発憲章の試行を始める",
+            action: () => {
+              state.location = "ホライズン";
+              renderCovenant();
+            },
+          },
+        ],
+      });
+    },
 
     chapter3b: () => {
       const sim = state.covenantSim || { summary: "", outcomes: [], tension: "medium" };
@@ -304,6 +373,7 @@ export function renderEpilogue(game) {
   if (state.missed.length >= 2) processNote += "いくつかの出会いを見送った。";
   if (state.deliberationOutcome === "dissent") processNote += "異議を記録したまま決定した。";
   if (state.flags.refusedConcertVow) processNote += "一回性の誓約を拒んだ。";
+  if (state.flags.ev04_done) processNote += "忘れと記録の境界を試した。";
 
   go({
     chapter: "エピローグ",

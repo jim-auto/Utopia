@@ -19,6 +19,11 @@ const NPCS = {
     role: "未来人の声",
     color: "#7ecf9a",
   },
+  lin: {
+    name: "リン",
+    role: "記録職 / パリンプセスト",
+    color: "#8ab4d4",
+  },
 };
 
 function portraitSvg(id) {
@@ -55,6 +60,13 @@ function portraitSvg(id) {
       <circle cx="50" cy="72" r="16" fill="none" stroke="${npc.color}" stroke-width="1.2" opacity="0.6"/>
       <circle cx="38" cy="38" r="2" fill="${npc.color}" opacity="0.8"/>
       <circle cx="62" cy="38" r="2" fill="${npc.color}" opacity="0.8"/>
+    `,
+    lin: `
+      <rect x="38" y="30" width="24" height="32" rx="2" fill="none" stroke="${npc.color}" stroke-width="1.2"/>
+      <line x1="42" y1="38" x2="58" y2="38" stroke="${npc.color}" stroke-width="1" opacity="0.5"/>
+      <line x1="42" y1="46" x2="55" y2="46" stroke="${npc.color}" stroke-width="1" opacity="0.35"/>
+      <circle cx="50" cy="24" r="9" fill="none" stroke="${npc.color}" stroke-width="1.2"/>
+      <path d="M30 75 L50 58 L70 75" fill="none" stroke="${npc.color}" stroke-width="1" opacity="0.4"/>
     `,
   };
 
