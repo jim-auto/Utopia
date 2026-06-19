@@ -10,6 +10,10 @@ import {
   getFeaturedQuote as getEvent05Quote,
 } from "./covenant-event-05.js";
 import {
+  renderOutcomeCards as renderEvent06Cards,
+  getFeaturedQuote as getEvent06Quote,
+} from "./covenant-event-06.js";
+import {
   renderOutcomeCards as renderEvent12Cards,
   getFeaturedQuote as getEvent12Quote,
 } from "./covenant-event-12.js";
@@ -23,6 +27,7 @@ export function getSceneHandlers(game) {
     renderCovenant,
     renderEvent04Covenant,
     renderEvent05Covenant,
+    renderEvent06Covenant,
     renderEvent12Covenant,
     renderDeliberation,
     renderEndingPicker,
@@ -126,14 +131,86 @@ export function getSceneHandlers(game) {
           ? `
           <p>月・パリンプセスト。記録の海の端で、センがあなたを迎える。</p>
           ${say("sen", "安全な家があるのに出ていくことを、我々は勇気と呼ぶべきではない。残る者の人生を二流にしてはならない。")}
+          ${state.refusal === "family" ? "<p>あなたはかつて<strong>家族</strong>を拒んだ。センは言う。「残る者も、血縁以外の絆で生きられる——それを、二流と呼ぶな」</p>" : ""}
+          ${state.refusal === "immortality" ? "<p>あなたは<strong>永遠の生命</strong>を拒んだ。センは続ける。「終わりのない時間に、『残る』選択は軽くなる——だからこそ、重さを問う」</p>" : ""}
           <p>あなたはアスターのもとには間に合わなかった。彼からの手紙だけが届く。「不可逆性は、初めて自由になる」と。</p>
         `
           : `
           <p>土星圏・ホライズン。アスターは門の向こうを見つめている。</p>
           ${say("aster", "これは、人類が初めて自由に選べる、真の不可逆性だ。")}
+          ${state.refusal === "immortality" ? "<p>あなたは<strong>永遠の生命</strong>を拒んだ。アスターが聞く。「終わりを選べる今、なぜ門に行く必要がある——と、残る者は言う。あなたはどう答える」</p>" : ""}
+          ${state.refusal === "fame" ? "<p>あなたは<strong>名声</strong>を拒んだ。アスターは続ける。「誰にも記録されない出発に、意味はあるか。あるなら、それは私たちだけの意味だ」</p>" : ""}
           <p>センのもとには間に合わなかった。記録庫から届いたのは短い文だけ。「残ることも、冒険と同じ重さを持て」。</p>
         `,
         speaker: metAster ? "sen" : "aster",
+        choices: [{ label: "第二章へ — 約束の重さ", action: () => go("chapter1_bridge") }],
+      });
+    },
+
+    chapter1_bridge: () =>
+      go({
+        chapter: "第一章",
+        title: "感覚の共有期間",
+        body: `
+          <p>金星・コーラス。ここでは、限られた期間だけ感覚を分かち合う共同体がある。</p>
+          ${say("io", "触れ合うことは、溶けることではない。切れる保証があるから、ここに来られる。")}
+          <p>第二章の前に、ここで試行を見届けるかどうかを選べる。</p>
+        `,
+        location: "コーラス",
+        mood: "chorus",
+        art: "chorus",
+        speaker: "io",
+        choices: [
+          {
+            label: "感覚の共有期間を見届ける（事件 #06）",
+            hint: "関係の深化・自己の境界・退出後の記憶",
+            action: () => go("event06_intro"),
+          },
+          {
+            label: "第二章へ進む — 約束の重さ",
+            action: () => go("chapter2"),
+          },
+        ],
+      }),
+
+    event06_intro: () =>
+      go({
+        chapter: "第一章",
+        title: "感覚の共有期間 — 設計",
+        body: `
+          <p>イオは共有室の設計図を見せる。三つの円が重なり、境界線だけが保たれている。</p>
+          ${state.refusal === "collective" ? "<p>あなたはかつて<strong>集団意識</strong>——境界の溶解——を拒んだ。イオは、切れる共有を試している。</p>" : ""}
+          ${state.refusal === "family" ? "<p>あなたはかつて<strong>家族</strong>——血縁による義務——を拒んだ。ここでは、選ばれた親密さだけが共有される。</p>" : ""}
+          ${say("io", "深めることと、消えることは違う。条項を選び、三年の試行を始めよう。")}
+        `,
+        location: "コーラス",
+        mood: "chorus",
+        art: "chorus",
+        speaker: "io",
+        choices: [
+          {
+            label: "コヴナント・グラマー — 共有期間の条項を組む",
+            action: () => renderEvent06Covenant(),
+          },
+        ],
+      }),
+
+    event06_revisit: () => {
+      const sim = state.event06Sim || { summary: "", outcomes: [], tension: "medium" };
+      const quote = getEvent06Quote(sim);
+      go({
+        chapter: "第一章",
+        title: "感覚の共有期間 — 三年後",
+        body: `
+          <p class="sim-lead">${sim.summary}</p>
+          ${renderEvent06Cards(sim.outcomes)}
+          <p>共有は深化した。境界は完全には消えなかった。退出した者の記憶は、外部へ持ち出されなかった——それが、残った者の安心にもなった。</p>
+          ${quote ? say(quote.npc, quote.quote) : ""}
+        `,
+        location: "コーラス",
+        mood: sim.tension === "high" ? "vow" : "chorus",
+        art: "chorus",
+        speaker: quote?.npc,
         choices: [{ label: "第二章へ — 約束の重さ", action: () => go("chapter2") }],
       });
     },
@@ -161,6 +238,8 @@ export function getSceneHandlers(game) {
           title: "最後の初演 — 誓約",
           body: `
             <p>会場は完成した。演奏まであと三ヶ月。ソリが静かにこちらを見る。</p>
+            ${state.refusal === "art" ? "<p>あなたは<strong>芸術家としての成功</strong>——完成という名の固定——を拒んだ。ソリは言う。「この曲は完成する。ただし、二度と再演しない——それでも、作品と呼べるか」</p>" : ""}
+            ${state.refusal === "fame" ? "<p>あなたは<strong>名声</strong>を拒んだ。ソリは続ける。「誰も知らない演奏に、あなたは居合わせるか。居合わせた者だけが、それを持つ」</p>" : ""}
             ${say("soli", "記録しない。再演しない。口伝えも、共同体の規則で禁止する——あなたは、その約束に署名できますか？")}
           `,
           location: "アトリエ",
@@ -195,6 +274,8 @@ export function getSceneHandlers(game) {
           title: "無名の集団 — 誓約",
           body: `
             <p>個人名を使わない村。ここでは、呼ばれ方が毎月変わる。記録も、外部への言及も、試験期間中は禁止されている。</p>
+            ${state.refusal === "fame" ? "<p>あなたは<strong>名声</strong>を拒んだ。ここでは、名前すら持ち出せない——記録に残ることを避けたあなたに、この共同体は都合がいい。</p>" : ""}
+            ${state.refusal === "family" ? "<p>あなたは<strong>家族</strong>を拒んだ。血縁のない者だけが、匿名で集まっている——義務ではなく、選んだ関係だけが残る。</p>" : ""}
             <p>「退出はいつでもできます。ただし、試験の期間中は、私たちの匿名性を外に持ち出さないでください」</p>
           `,
           location: "コモン・ガーデン",
@@ -315,6 +396,8 @@ export function getSceneHandlers(game) {
         title: "まだ存在しない者たち",
         body: `
           <p>20年が経った。${state.flags.joinedConcert ? "ソリの初演と、その後の沈黙の争いが、共同体に深い亀裂を残した。" : "無名の集団は、次世代によって再解釈されている。"}</p>
+          ${state.refusal === "immortality" ? "<p>あなたは<strong>永遠の生命</strong>を拒んだ。子ども代表が言う。「私たちは終わりのある存在として生まれる——その前提を、憲章に書いて」</p>" : ""}
+          ${state.refusal === "family" ? "<p>あなたは<strong>家族</strong>を拒んだ。子ども代表は続ける。「血縁で未来を縛らないで。再選択の権利を、条文に」</p>" : ""}
           ${say("child", "あなたたちが退屈だから、私たちの未来を一つ減らすのですか。")}
           <p>船団の設計——未来人の同意——を、抽象論ではなく制度として組む時が来た。</p>
         `,
@@ -419,6 +502,7 @@ export function getSceneHandlers(game) {
         title: "命令しない神",
         body: `
           <p>一部の市民が《モザイク》——全人類の経験を読み、「次に目指すべき目的」を<strong>提案するだけ</strong>の知性——の建造を提案した。</p>
+          ${state.refusal === "collective" ? "<p>あなたは<strong>集団意識</strong>——境界の溶解——を拒んだ。カエデは言う。「モザイクは溶けない。ただ、皆が同じ答えを選び始めた——それは、境界を保ったまま起きうる」</p>" : ""}
           ${say("kaede", "これは神ではない。文明が自分自身へ送る手紙だ。")}
           ${say("sen", "命令しなくても、誰もがその答えを信じるなら、それは神と何が違うのか。")}
           <p>問題は暴走ではない。自由な人間が、自発的に判断を委ねることだ。</p>
@@ -518,6 +602,7 @@ export function renderEpilogue(game) {
   if (state.flags.refusedConcertVow) processNote += "一回性の誓約を拒んだ。";
   if (state.flags.ev04_done) processNote += "忘れと記録の境界を試した。";
   if (state.flags.ev05_done) processNote += "終わらない庭の試行を見届けた。";
+  if (state.flags.ev06_done) processNote += "切れる共有の試行を見届けた。";
   if (state.flags.ev12_done) processNote += "命令しない神の条件を設計した。";
   if (state.flags.ev12_skipped) processNote += "モザイク試行を見送った。";
   if (state.ending === "mosaic" && state.event12Sim?.safeguards) {

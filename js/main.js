@@ -30,6 +30,11 @@ import {
   getDeliberationReason as getEvent05Reason,
 } from "./covenant-event-05.js";
 import {
+  buildClauseForm as buildEvent06Form,
+  simulateEvent06,
+  getDeliberationReason as getEvent06Reason,
+} from "./covenant-event-06.js";
+import {
   buildClauseForm as buildEvent12Form,
   simulateEvent12,
   getDeliberationReasons as getEvent12Reasons,
@@ -56,6 +61,7 @@ export function createGame() {
     renderCovenant,
     renderEvent04Covenant,
     renderEvent05Covenant,
+    renderEvent06Covenant,
     renderEvent12Covenant,
     renderDeliberation,
     renderEndingPicker,
@@ -262,6 +268,39 @@ export function createGame() {
     });
   }
 
+  function renderEvent06Covenant() {
+    const selected = new Set(["timedSession", "exitAnytime", "soloBuffer"]);
+
+    renderSystem({
+      title: "コヴナント事件 #06 — 感覚の共有期間",
+      desc: "関係の深化 × 自己の境界 × 退出後の記憶。切れない共有は、親密さではない。",
+      systemId: "covenant",
+      contentHtml: `<div id="event06-form">${buildEvent06Form(selected)}</div>`,
+      actions: [
+        {
+          label: "コーラスで試行を開始する（3年後に再訪）",
+          action: () => {
+            document.querySelectorAll("#event06-form input").forEach((input) => {
+              if (input.checked) state.flags[`ev06_${input.dataset.key}`] = true;
+            });
+            state.flags.ev06_done = true;
+            state.event06Sim = simulateEvent06(state);
+            if (state.flags.ev06_exitAnytime) bumpTrust(state, "sen", 1);
+            go("event06_revisit");
+          },
+        },
+      ],
+    });
+
+    document.getElementById("system-content").addEventListener("change", (e) => {
+      if (e.target.type === "checkbox") {
+        const key = e.target.dataset.key;
+        if (e.target.checked) selected.add(key);
+        else selected.delete(key);
+      }
+    });
+  }
+
   function renderEvent12Covenant() {
     const selected = new Set(["noCommand", "periodicVote", "minorityWitness"]);
 
@@ -417,6 +456,10 @@ export function createGame() {
       reasons.push(getEvent05Reason());
     }
 
+    if (state.flags.ev06_done) {
+      reasons.push(getEvent06Reason());
+    }
+
     if (state.flags.ev12_done) {
       reasons.push(...getEvent12Reasons());
     }
@@ -446,6 +489,7 @@ export function createGame() {
           <span class="tag ${picked.has("sen") ? "active" : ""}">異議の記録</span>
           ${state.flags.ev04_done ? `<span class="tag ${picked.has("lin") ? "active" : ""}">記憶の隙間</span>` : ""}
           ${state.flags.ev05_done ? `<span class="tag ${picked.has("haru") ? "active" : ""}">終わらない庭</span>` : ""}
+          ${state.flags.ev06_done ? `<span class="tag ${picked.has("io") ? "active" : ""}">切れる共有</span>` : ""}
           ${state.flags.ev12_done ? `<span class="tag ${picked.has("kaede") ? "active" : ""}">命令しない神</span>` : ""}
         </div>
       `;

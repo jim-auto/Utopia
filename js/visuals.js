@@ -44,6 +44,11 @@ const MOODS = {
     glow: "rgba(240, 200, 120, 0.4)",
     gradient: ["#0a0810", "#181028", "#281838"],
   },
+  chorus: {
+    accent: "#e8a8c8",
+    glow: "rgba(232, 168, 200, 0.35)",
+    gradient: ["#100810", "#201018", "#301828"],
+  },
 };
 
 const SCENE_ART = {
@@ -59,6 +64,7 @@ const SCENE_ART = {
   ending: () => artEnding(),
   refusal: () => artPaths(),
   mosaic: () => artMosaic(),
+  chorus: () => artChorus(),
 };
 
 const SYSTEM_META = {
@@ -128,6 +134,7 @@ export function moodFromLocation(location = "") {
   if (location.includes("月") || location.includes("パリンプセスト")) return "memory";
   if (location.includes("ホライズン") || location.includes("土星")) return "council";
   if (location.includes("コモン") || location.includes("地球")) return "garden";
+  if (location.includes("コーラス") || location.includes("金星")) return "chorus";
   return "cosmos";
 }
 
@@ -308,5 +315,16 @@ function artMosaic() {
         <line x1="${x}" y1="${y}" x2="200" y2="110" stroke="var(--mood-accent)" stroke-width="0.8" opacity="0.3"/>
       `).join("")}
       <circle cx="200" cy="110" r="12" fill="var(--mood-accent)" fill-opacity="0.5" class="pulse"/>
+    </svg>`;
+}
+
+function artChorus() {
+  return `
+    <svg viewBox="0 0 400 220" class="scene-svg" aria-hidden="true">
+      <ellipse cx="200" cy="120" rx="120" ry="60" fill="none" stroke="var(--mood-accent)" stroke-width="1" opacity="0.2"/>
+      <circle cx="140" cy="100" r="28" fill="none" stroke="var(--mood-accent)" stroke-width="1.2" opacity="0.45" class="float"/>
+      <circle cx="260" cy="100" r="28" fill="none" stroke="var(--mood-accent)" stroke-width="1.2" opacity="0.45" class="float delay"/>
+      <circle cx="200" cy="130" r="28" fill="none" stroke="var(--mood-accent)" stroke-width="1.2" opacity="0.45" class="pulse"/>
+      <path d="M140 100 Q170 115 200 130 Q230 115 260 100" fill="none" stroke="var(--mood-accent)" stroke-width="0.8" opacity="0.35"/>
     </svg>`;
 }

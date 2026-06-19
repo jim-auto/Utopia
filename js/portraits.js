@@ -34,6 +34,11 @@ const NPCS = {
     role: "庭師 / コモン・ガーデン",
     color: "#7ecf9a",
   },
+  io: {
+    name: "イオ",
+    role: "案内人 / コーラス",
+    color: "#e8a8c8",
+  },
 };
 
 function portraitSvg(id) {
@@ -94,6 +99,14 @@ function portraitSvg(id) {
       <circle cx="50" cy="38" r="10" fill="none" stroke="${npc.color}" stroke-width="1.2"/>
       <path d="M25 70 Q35 60 45 70" fill="none" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
       <path d="M55 70 Q65 60 75 70" fill="none" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
+    `,
+    io: `
+      <circle cx="38" cy="42" r="14" fill="none" stroke="${npc.color}" stroke-width="1" opacity="0.45"/>
+      <circle cx="62" cy="42" r="14" fill="none" stroke="${npc.color}" stroke-width="1" opacity="0.45"/>
+      <circle cx="50" cy="58" r="14" fill="none" stroke="${npc.color}" stroke-width="1" opacity="0.45"/>
+      <circle cx="50" cy="50" r="6" fill="${npc.color}" opacity="0.35"/>
+      <path d="M38 42 Q44 46 50 50 Q56 46 62 42" fill="none" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
+      <path d="M38 42 Q44 54 50 58 Q56 54 62 42" fill="none" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
     `,
   };
 
