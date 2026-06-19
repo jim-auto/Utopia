@@ -15,6 +15,7 @@ import {
   hideRestart,
 } from "./ui.js";
 import { getSceneHandlers, renderEpilogue } from "./scenes.js";
+import { initAmbience, setMood } from "./visuals.js";
 
 const scenes = {};
 
@@ -61,6 +62,9 @@ export function createGame() {
       title: opts.title,
       body: opts.body,
       choices: opts.choices,
+      mood: opts.mood,
+      art: opts.art,
+      titleScreen: opts.titleScreen,
     });
   }
 
@@ -76,6 +80,8 @@ export function createGame() {
       chapter: "始まり",
       title: "あなたが拒んだもの",
       body: `<p>ゲーム開始時、主人公は過去に何かを拒否した。それが、あなた自身のテーマと、NPCから受ける問いを変える。</p>`,
+      mood: "cosmos",
+      art: "refusal",
       choices: REFUSALS.map((r) => ({
         label: r.label,
         hint: r.hint,
@@ -129,6 +135,7 @@ export function createGame() {
     renderSystem({
       title: "プレゼンス — 時間と注意",
       desc: "一つの期間に、重要な出来事へ同時に参加することはできない。見逃した出来事は失敗ではない。しかし、世界はあなたを待たない。",
+      systemId: "presence",
       contentHtml: `
         <div class="conflict-box">
           <div class="conflict-side">
@@ -228,6 +235,7 @@ export function createGame() {
     renderSystem({
       title: "コヴナント・グラマー",
       desc: "社会のルールを組み、実際の地区で試行する。完成した制度はシミュレーションだけで終わらない。",
+      systemId: "covenant",
       contentHtml: `<div id="covenant-form">${renderClauses()}</div>`,
       actions: [
         {
@@ -316,6 +324,7 @@ export function createGame() {
     renderSystem({
       title: "理由の地図",
       desc: "勝利条件は全会一致ではない。安定した異議——負担が理解され、退出権が残り、意見が記録されれば、正当な決定が成立する。",
+      systemId: "reasons",
       contentHtml: "",
       actions: [
         {
@@ -351,6 +360,7 @@ export function createGame() {
     renderSystem({
       title: "出発憲章 — 未来への手渡し",
       desc: "正解はない。得るものと失うものを選ぶ。",
+      systemId: "charter",
       contentHtml: `
         <div class="card-grid">
           ${endingCards
@@ -381,6 +391,8 @@ export function createGame() {
 }
 
 export function startGame() {
+  initAmbience();
+  setMood("cosmos");
   const game = createGame();
   game.go("title");
 }

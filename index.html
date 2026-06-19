@@ -4,49 +4,79 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="UTOPIA — 最後の必要のあと。ブラウザで遊べるインタラクティブ・プロトタイプ。">
+  <meta name="theme-color" content="#070b14">
   <title>UTOPIA — 最後の必要のあと</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body data-mood="cosmos">
   <div id="app">
-    <div class="starfield" aria-hidden="true"></div>
+    <canvas id="ambient-canvas" aria-hidden="true"></canvas>
+    <div class="ambient-gradient" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
 
     <header class="hud" id="hud" hidden>
       <div class="hud-left">
-        <span class="hud-label">期</span>
-        <span id="hud-period">—</span>
+        <span class="hud-chip">
+          <span class="hud-label">期</span>
+          <span id="hud-period">—</span>
+        </span>
       </div>
       <div class="hud-center">
+        <span class="location-pin" aria-hidden="true"></span>
         <span id="hud-location">コモン・ガーデン</span>
       </div>
       <div class="hud-right">
-        <span class="hud-label">証言</span>
-        <span id="hud-trust">客人</span>
+        <span class="hud-chip trust-chip">
+          <span class="hud-label">証言</span>
+          <span id="hud-trust">客人</span>
+        </span>
+      </div>
+      <div class="period-track" id="period-progress" aria-label="物語の進行">
+        <span class="period-dot" data-period="0" title="序章"></span>
+        <span class="period-dot" data-period="1" title="第一章"></span>
+        <span class="period-dot" data-period="2" title="第二章"></span>
+        <span class="period-dot" data-period="3" title="第三章"></span>
+        <span class="period-dot" data-period="4" title="第四章"></span>
+        <span class="period-dot" data-period="5" title="最終章"></span>
       </div>
     </header>
 
     <main class="stage" id="stage">
       <section class="panel narrative-panel" id="narrative-panel">
-        <p class="chapter-tag" id="chapter-tag"></p>
-        <h1 class="scene-title" id="scene-title"></h1>
-        <div class="scene-body" id="scene-body"></div>
-        <div class="scene-choices" id="scene-choices"></div>
+        <div class="scene-hero-wrap">
+          <div class="scene-hero" id="scene-hero"></div>
+          <div class="scene-hero-fade"></div>
+        </div>
+        <div class="panel-inner">
+          <p class="chapter-tag" id="chapter-tag"></p>
+          <h1 class="scene-title" id="scene-title"></h1>
+          <div class="scene-body" id="scene-body"></div>
+          <div class="scene-choices" id="scene-choices"></div>
+        </div>
       </section>
 
       <section class="panel system-panel" id="system-panel" hidden>
-        <div class="system-header">
-          <h2 id="system-title"></h2>
-          <p id="system-desc"></p>
+        <div class="system-badge" id="system-badge"></div>
+        <div class="scene-hero-wrap system-hero-wrap">
+          <div class="scene-hero" id="system-hero"></div>
+          <div class="scene-hero-fade"></div>
         </div>
-        <div id="system-content"></div>
-        <div class="system-actions" id="system-actions"></div>
+        <div class="panel-inner">
+          <div class="system-header">
+            <h2 id="system-title"></h2>
+            <p id="system-desc"></p>
+          </div>
+          <div id="system-content"></div>
+          <div class="system-actions" id="system-actions"></div>
+        </div>
       </section>
     </main>
 
     <aside class="sidebar" id="sidebar" hidden>
+      <div class="sidebar-title">記録</div>
       <details open>
         <summary>誓約</summary>
         <ul id="vow-list"></ul>
@@ -59,7 +89,7 @@
 
     <footer class="footer" id="footer">
       <button type="button" class="btn btn-ghost" id="btn-restart" hidden>最初から</button>
-      <span class="footer-note">プロトタイプ — 約20分</span>
+      <span class="footer-note">UTOPIA prototype — 約20分</span>
     </footer>
   </div>
 

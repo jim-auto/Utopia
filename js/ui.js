@@ -1,3 +1,13 @@
+import {
+  setMood,
+  renderSceneHero,
+  getSceneArtHtml,
+  animateSceneText,
+  updatePeriodProgress,
+  moodFromLocation,
+  getSystemMeta,
+} from "./visuals.js";
+
 const narrativePanel = () => document.getElementById("narrative-panel");
 const systemPanel = () => document.getElementById("system-panel");
 
@@ -18,6 +28,8 @@ export function setHud(state) {
     state.period === 0 ? "序章" : `第${state.period}期`;
   document.getElementById("hud-location").textContent = state.location;
   document.getElementById("hud-trust").textContent = state.witnessTier;
+  setMood(moodFromLocation(state.location));
+  updatePeriodProgress(state.period);
   renderSidebar(state);
 }
 
@@ -34,7 +46,10 @@ export function renderSidebar(state) {
     state.vows.length === 0
       ? "<li>なし</li>"
       : state.vows
-          .map((v) => `<li>${v.label} <span style="opacity:0.6">(${v.status})</span></li>`)
+          .map(
+            (v) =>
+              `<li><span class="vow-active">${v.label}</span> <em>${v.status}</em></li>`
+          )
           .join("");
 
   missedList.innerHTML =
@@ -43,18 +58,27 @@ export function renderSidebar(state) {
       : state.missed.map((m) => `<li>${m}</li>`).join("");
 }
 
-export function renderScene({ chapter, title, body, choices = [] }) {
+export function renderScene({ chapter, title, body, choices = [], mood, art, titleScreen = false }) {
   showNarrative();
+  if (mood) setMood(mood);
+  renderSceneHero(art || "title");
+
+  const panel = narrativePanel();
+  panel.classList.toggle("title-screen", titleScreen);
+
   document.getElementById("chapter-tag").textContent = chapter || "";
   document.getElementById("scene-title").textContent = title || "";
   document.getElementById("scene-body").innerHTML = body || "";
+
   const container = document.getElementById("scene-choices");
   container.innerHTML = "";
 
-  choices.forEach((choice) => {
+  choices.forEach((choice, i) => {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = choice.primary ? "btn btn-primary" : "btn btn-choice";
+    btn.style.animationDelay = `${0.3 + i * 0.08}s`;
+    btn.classList.add("reveal");
     if (choice.hint) {
       btn.innerHTML = `<span class="choice-label">${choice.label}</span><span class="choice-hint">${choice.hint}</span>`;
     } else {
@@ -63,10 +87,24 @@ export function renderScene({ chapter, title, body, choices = [] }) {
     btn.addEventListener("click", choice.action);
     container.appendChild(btn);
   });
+
+  animateSceneText();
+  panel.style.animation = "none";
+  void panel.offsetWidth;
+  panel.style.animation = "";
 }
 
-export function renderSystem({ title, desc, contentHtml, actions = [] }) {
+export function renderSystem({ title, desc, contentHtml, actions = [], systemId = "presence" }) {
   showSystem();
+  const meta = getSystemMeta(systemId);
+  setMood(meta.mood);
+
+  const hero = document.getElementById("system-hero");
+  if (hero) hero.innerHTML = getSceneArtHtml(meta.art);
+
+  const badge = document.getElementById("system-badge");
+  if (badge) badge.textContent = meta.badge;
+
   document.getElementById("system-title").textContent = title;
   document.getElementById("system-desc").textContent = desc;
   document.getElementById("system-content").innerHTML = contentHtml;
@@ -81,6 +119,11 @@ export function renderSystem({ title, desc, contentHtml, actions = [] }) {
     btn.addEventListener("click", action.action);
     container.appendChild(btn);
   });
+
+  const panel = systemPanel();
+  panel.style.animation = "none";
+  void panel.offsetWidth;
+  panel.style.animation = "";
 }
 
 export function showRestart(onRestart) {

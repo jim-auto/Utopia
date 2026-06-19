@@ -12,8 +12,10 @@ export function getSceneHandlers(game) {
           <p><em>最後の必要のあと</em></p>
           <p>世界は救われた。もう、誰も救わなくていい。<br>では、人類は何を未来に手渡すのか。</p>
           <blockquote>意味には「取り消せなさ」が必要である。<br>しかし正義には「退出できること」が必要である。</blockquote>
-          <p>ブラウザで遊べるインタラクティブ・プロトタイプ（約20分）</p>
         `,
+        mood: "cosmos",
+        art: "title",
+        titleScreen: true,
         choices: [
           {
             label: "始める",
@@ -37,6 +39,8 @@ export function getSceneHandlers(game) {
         `,
         period: 0,
         location: "コモン・ガーデン",
+        mood: "garden",
+        art: "garden",
         choices: [{ label: "祭りの広場へ", action: () => go("prologue2") }],
       }),
 
@@ -49,6 +53,8 @@ export function getSceneHandlers(game) {
           <p>誰かが言う。「退屈？」——笑いが返る。退屈なら、ここを去ればいい。誰も止めない。</p>
           <p>あなたは${refusalLine(state)}</p>
         `,
+        mood: "dawn",
+        art: "festival",
         choices: [{ label: "港へ向かう", action: () => go("prologue3") }],
       }),
 
@@ -62,6 +68,8 @@ export function getSceneHandlers(game) {
           <p>避難命令はない。行く必要もない。それでも、志願者は数百万人に及ぶ。</p>
           <blockquote>何の必要もないのに、我々は楽園を去るべきか。</blockquote>
         `,
+        mood: "cosmos",
+        art: "gate",
         choices: [{ label: "証人としての任務が始まる", action: () => go("chapter1") }],
       }),
 
@@ -74,6 +82,9 @@ export function getSceneHandlers(game) {
           <p>まず、出発を望む者と、残る者の声を聞く時が来た。同じ日に、二人とも会いたがっている——だが、あなたの<strong>注意</strong>は一つしかない。</p>
         `,
         period: 1,
+        location: "太陽系",
+        mood: "cosmos",
+        art: "horizon",
         choices: [{ label: "プレゼンス — どちらに居合わせるか", action: () => renderPresence("chapter1") }],
       }),
 
@@ -82,6 +93,9 @@ export function getSceneHandlers(game) {
       go({
         chapter: "第一章",
         title: metAster ? "センの記憶管理室" : "アスターの展望台",
+        location: metAster ? "パリンプセスト" : "ホライズン",
+        mood: metAster ? "memory" : "cosmos",
+        art: metAster ? "palimpsest" : "horizon",
         body: metAster
           ? `
           <p>月・パリンプセスト。記録の海の端で、センは静かに言う。</p>
@@ -108,6 +122,8 @@ export function getSceneHandlers(game) {
         `,
         period: 2,
         location: "火星 / 地球",
+        mood: "mars",
+        art: "atelier",
         choices: [{ label: "プレゼンス — どちらに参加するか", action: () => renderPresence("chapter2") }],
       }),
 
@@ -121,6 +137,8 @@ export function getSceneHandlers(game) {
             <p>「記録しない。再演しない。口伝えも、共同体の規則で禁止する——あなたは、その約束に署名できますか？」</p>
           `,
           location: "アトリエ",
+          mood: "vow",
+          art: "atelier",
           choices: [
             {
               label: "誓約する — 記録も口伝えもしない",
@@ -152,6 +170,8 @@ export function getSceneHandlers(game) {
             <p>「退出はいつでもできます。ただし、試験の期間中は、私たちの匿名性を外に持ち出さないでください」</p>
           `,
           location: "コモン・ガーデン",
+          mood: "garden",
+          art: "garden",
           choices: [
             {
               label: "誓約する — 試験期間中、匿名性を守る",
@@ -180,6 +200,9 @@ export function getSceneHandlers(game) {
           <p>船団の設計——未来人の同意——を、抽象論ではなく制度として組む時が来た。</p>
         `,
         period: 3,
+        location: "ホライズン",
+        mood: "law",
+        art: "covenant",
         choices: [{ label: "コヴナント・グラマー — 制度を試作する", action: () => renderCovenant() }],
       }),
 
@@ -193,6 +216,8 @@ export function getSceneHandlers(game) {
         `,
         period: 4,
         location: "ホライズン",
+        mood: "council",
+        art: "deliberation",
         choices: [{ label: "議会に入る", action: () => renderDeliberation() }],
       }),
 
@@ -206,6 +231,9 @@ export function getSceneHandlers(game) {
           <p>あなたがこれまで試した制度、守った約束、見送った出来事、記録した異議。それらすべてが、未来への手渡し方を形作る。</p>
         `,
         period: 5,
+        location: "ホライズン",
+        mood: "finale",
+        art: "gate",
         choices: [{ label: "出発憲章を起草する", action: () => renderEndingPicker() }],
       }),
   };
@@ -230,6 +258,8 @@ export function renderEpilogue(game) {
   go({
     chapter: "エピローグ",
     title: e.title,
+    mood: "finale",
+    art: "ending",
     body: `
       <div class="ending-card">
         <p>${processNote || "静かな選択の積み重ねが、この結末を形作った。"}</p>
