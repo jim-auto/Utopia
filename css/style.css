@@ -1527,6 +1527,107 @@ body.mode-3d .title-screen .scene-hero {
   margin: 1rem 0;
 }
 
+/* SYS-07 — フォージ身体試着 */
+.forge-tryon {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.forge-lead {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.forge-silhouette {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem;
+  border: 1px solid var(--bg-panel-border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.forge-body-svg {
+  width: 100px;
+  height: auto;
+  filter: drop-shadow(0 0 16px var(--mood-glow));
+}
+
+.forge-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.forge-channel {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--bg-panel-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.forge-channel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.forge-channel-label {
+  color: var(--mood-accent);
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+}
+
+.forge-channel-val {
+  font-family: ui-monospace, monospace;
+  color: var(--accent-gold);
+  font-size: 0.85rem;
+}
+
+.forge-channel-desc {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.forge-stepper {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.forge-btn {
+  min-width: 2.2rem;
+  padding: 0.35rem 0.6rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--bg-panel-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.forge-btn:hover {
+  border-color: var(--mood-accent);
+  color: var(--mood-accent);
+}
+
+.forge-remaining {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.forge-remaining-warn b { color: #e8a060; }
+.forge-remaining-ok b { color: var(--mood-accent); }
+
+.forge-skip-btn {
+  align-self: flex-start;
+  font-size: 0.82rem;
+}
+
 .tag-row {
   display: flex;
   flex-wrap: wrap;

@@ -3,6 +3,7 @@ const MOOD_TONES = {
   dawn: { a: 130.81, b: 196, vol: 0.045 },
   garden: { a: 98, b: 146.83, vol: 0.04 },
   mars: { a: 123.47, b: 185, vol: 0.042 },
+  forge: { a: 130.81, b: 196, vol: 0.04 },
   memory: { a: 116.54, b: 174.61, vol: 0.038 },
   vow: { a: 103.83, b: 155.56, vol: 0.04 },
   law: { a: 87.31, b: 130.81, vol: 0.035 },

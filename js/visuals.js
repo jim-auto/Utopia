@@ -56,11 +56,17 @@ const MOODS = {
     glow: "rgba(94, 200, 216, 0.35)",
     gradient: ["#040810", "#081820", "#0c2830"],
   },
+  forge: {
+    accent: "#e8c878",
+    glow: "rgba(232, 200, 120, 0.35)",
+    gradient: ["#0c0804", "#181008", "#282010"],
+  },
 };
 
 const SYSTEM_META = {
   presence: { badge: "プレゼンス", mood: "cosmos", art: "gate" },
   embodied: { badge: "身体的実践", mood: "mars", art: "atelier" },
+  forgeBody: { badge: "身体的実践", mood: "forge", art: "forge" },
   vows: { badge: "誓約", mood: "vow", art: "atelier" },
   covenant: { badge: "コヴナント", mood: "law", art: "covenant" },
   reasons: { badge: "理由の地図", mood: "council", art: "deliberation" },
@@ -78,6 +84,7 @@ const MOTE_PRESETS = {
   finale: { count: 16, drift: 0.00014 },
   chorus: { count: 20, drift: 0.00011 },
   abyss: { count: 14, drift: 0.00018 },
+  forge: { count: 12, drift: 0.00014 },
   dawn: { count: 10, drift: 0.0001 },
 };
 
@@ -185,6 +192,7 @@ export function moodFromLocation(location = "") {
   if (location.includes("コモン") || location.includes("地球")) return "garden";
   if (location.includes("コーラス") || location.includes("金星")) return "chorus";
   if (location.includes("アビス") || location.includes("エウロパ")) return "abyss";
+  if (location.includes("水星") || location.includes("フォージ") || location.includes("ジェネシス")) return "forge";
   return "cosmos";
 }
 

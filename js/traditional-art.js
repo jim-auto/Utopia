@@ -279,6 +279,22 @@ function artAbyss() {
   );
 }
 
+function artForge() {
+  const id = uid();
+  return wrapArt(
+    "forge",
+    `
+    ${mountains(id, 150)}
+    <ellipse cx="200" cy="118" rx="42" ry="18" fill="none" stroke="url(#gold-${id})" stroke-width="1.2" stroke-opacity="0.45" class="spin-slow"/>
+    <circle cx="200" cy="118" r="10" fill="var(--mood-accent)" fill-opacity="0.35" class="pulse"/>
+    ${[0, 1, 2, 3, 4, 5].map(
+      (i) => `
+      <ellipse cx="${160 + i * 16}" cy="${148 + (i % 2) * 6}" rx="6" ry="8" fill="var(--mood-accent)" fill-opacity="0.2" stroke="url(#gold-${id})" stroke-width="0.6" opacity="0.6"/>`
+    ).join("")}
+    <path d="M168 100 Q200 82 232 100" fill="none" stroke="var(--mood-accent)" stroke-width="1" opacity="0.35"/>`
+  );
+}
+
 const ART_MAP = {
   title: () => artHorizonGate(true),
   garden: artGarden,
@@ -295,6 +311,7 @@ const ART_MAP = {
   mosaic: artMosaic,
   chorus: artChorus,
   abyss: artAbyss,
+  forge: artForge,
 };
 
 export function getTraditionalArt(artId = "title") {

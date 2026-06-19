@@ -69,6 +69,7 @@ const WORLD_LANDMARKS = {
   atelier: { label: "初演の舞台", position: [0, 3.5, -4] },
   council: { label: "公共議会", position: [0, 2.5, 0] },
   abyss: { label: "深層クレバス", position: [0, 1.5, -6] },
+  forge: { label: "試着室", position: [0, 2.8, -5] },
 };
 
 const WORLD_DISCOVERIES = {
@@ -99,6 +100,10 @@ const WORLD_DISCOVERIES = {
   abyss: {
     id: "abyss_trench",
     text: "未命名の深層。ここでは、驚異に急いで名を付けない——仮名期間が保護になる。",
+  },
+  forge: {
+    id: "forge_chamber",
+    text: "試着室。14日で戻れる身体——不可逆変更は、別の契約で。",
   },
 };
 
@@ -144,6 +149,7 @@ export function mapSceneToWorld({ art, mood, location } = {}) {
   const loc = location || "";
   if (loc.includes("コーラス") || loc.includes("金星")) return "chorus";
   if (loc.includes("アビス") || loc.includes("エウロパ") || loc.includes("深層")) return "abyss";
+  if (loc.includes("水星") || loc.includes("フォージ") || loc.includes("ジェネシス")) return "forge";
   if (loc.includes("月") || loc.includes("パリンプセスト")) return "palimpsest";
   if (loc.includes("火星") || loc.includes("アトリエ")) return "atelier";
   if (loc.includes("ホライズン") || loc.includes("土星")) return "horizon";
@@ -165,6 +171,7 @@ export function mapSceneToWorld({ art, mood, location } = {}) {
     ending: "horizon",
     refusal: "garden",
     abyss: "abyss",
+    forge: "forge",
   };
   if (art && artMap[art]) return artMap[art];
 
@@ -180,6 +187,7 @@ export function mapSceneToWorld({ art, mood, location } = {}) {
     council: "council",
     finale: "horizon",
     abyss: "abyss",
+    forge: "forge",
   };
   if (mood && moodMap[mood]) return moodMap[mood];
 

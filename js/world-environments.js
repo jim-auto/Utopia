@@ -92,6 +92,19 @@ export const WORLD_CONFIG = {
     bloom: 0.58,
     stars: 0.35,
   },
+  forge: {
+    fog: 0.034,
+    fogColor: "#100c06",
+    skyTop: "#483818",
+    skyBottom: "#0c0804",
+    horizon: "#e8c878",
+    sun: 0.58,
+    sunColor: "#ffe8b0",
+    hemiTop: "#d8b878",
+    hemiBottom: "#181008",
+    bloom: 0.52,
+    stars: 0.3,
+  },
 };
 
 function seededRandom(seed) {
@@ -841,6 +854,83 @@ function buildAbyss(accent, animated, addLandmark) {
   return group;
 }
 
+function buildForge(accent, animated, addLandmark) {
+  const group = new THREE.Group();
+  addRollingTerrain(group, "#1a1408", accent, 44, 101);
+  addMountainRing(group, 10, 40, 5, "#281808", 103);
+
+  for (let i = 0; i < 6; i++) {
+    const crucible = mesh(
+      new THREE.CylinderGeometry(0.9, 1.1, 1.2, 16),
+      new THREE.MeshStandardMaterial({
+        color: "#3a2818",
+        metalness: 0.55,
+        roughness: 0.35,
+        emissive: accent,
+        emissiveIntensity: 0.15,
+      })
+    );
+    const a = (i / 6) * Math.PI * 2;
+    crucible.position.set(Math.cos(a) * 9, 0.6, Math.sin(a) * 7 - 2);
+    group.add(crucible);
+    animated.push({ mesh: crucible, type: "pulse", phase: i * 0.5 });
+  }
+
+  for (let i = 0; i < 8; i++) {
+    const pod = mesh(
+      new THREE.SphereGeometry(0.7 + (i % 3) * 0.2, 20, 20),
+      new THREE.MeshStandardMaterial({
+        color: accent,
+        transparent: true,
+        opacity: 0.35,
+        emissive: accent,
+        emissiveIntensity: 0.35,
+      })
+    );
+    const a = (i / 8) * Math.PI * 2 + 0.4;
+    pod.position.set(Math.cos(a) * 6, 1.2 + (i % 2) * 0.5, Math.sin(a) * 5 - 3);
+    group.add(pod);
+    animated.push({ mesh: pod, type: "floatAt", baseY: pod.position.y, amp: 0.2, phase: i * 0.7 });
+  }
+
+  const chamber = mesh(
+    new THREE.TorusGeometry(3.2, 0.35, 16, 48),
+    new THREE.MeshStandardMaterial({
+      color: accent,
+      emissive: accent,
+      emissiveIntensity: 0.45,
+      metalness: 0.6,
+      roughness: 0.25,
+    })
+  );
+  chamber.rotation.x = Math.PI / 2;
+  chamber.position.set(0, 1.4, -5);
+  group.add(chamber);
+  animated.push({ mesh: chamber, type: "slowSpin", speed: 0.03 });
+
+  const inner = mesh(
+    new THREE.OctahedronGeometry(1.2, 0),
+    new THREE.MeshStandardMaterial({
+      color: "#f0e6c8",
+      emissive: accent,
+      emissiveIntensity: 0.5,
+      transparent: true,
+      opacity: 0.75,
+    })
+  );
+  inner.position.set(0, 1.6, -5);
+  group.add(inner);
+  animated.push({ mesh: inner, type: "floatAt", baseY: 1.6, amp: 0.15 });
+
+  const forgeLight = new THREE.PointLight(accent, 1.2, 25);
+  forgeLight.position.set(0, 3, -5);
+  group.add(forgeLight);
+
+  addParticles(group, animated, 90, "#e8c878", 32, 8, 107, 0.08);
+  addLandmark(group, [0, 3.2, -5]);
+  return group;
+}
+
 const BUILDERS = {
   garden: buildGarden,
   horizon: buildHorizon,
@@ -849,6 +939,7 @@ const BUILDERS = {
   atelier: buildAtelier,
   council: buildCouncil,
   abyss: buildAbyss,
+  forge: buildForge,
 };
 
 export function buildWorldEnvironment(worldId, accent, addLandmarkFn) {

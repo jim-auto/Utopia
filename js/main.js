@@ -41,12 +41,18 @@ import {
   getDeliberationReason as getEvent07Reason,
 } from "./covenant-event-07.js";
 import {
+  buildClauseForm as buildEvent08Form,
+  simulateEvent08,
+  getDeliberationReason as getEvent08Reason,
+} from "./covenant-event-08.js";
+import {
   buildClauseForm as buildEvent12Form,
   simulateEvent12,
   getDeliberationReasons as getEvent12Reasons,
   canUnlockMosaicEnding,
 } from "./covenant-event-12.js";
 import { mountAtelierImprov, getImprovDeliberationReason } from "./atelier-improv.js";
+import { mountForgeTryon } from "./forge-tryon.js";
 
 const scenes = {};
 
@@ -70,8 +76,10 @@ export function createGame() {
     renderEvent05Covenant,
     renderEvent06Covenant,
     renderEvent07Covenant,
+    renderEvent08Covenant,
     renderEvent12Covenant,
     renderAtelierImprov,
+    renderForgeTryon,
     renderDeliberation,
     renderEndingPicker,
     renderEpilogue: () => renderEpilogue(game),
@@ -348,6 +356,65 @@ export function createGame() {
     });
   }
 
+  function renderEvent08Covenant() {
+    const selected = new Set(["reversibleTrial", "minorConsent", "exitDesign"]);
+
+    renderSystem({
+      title: "コヴナント事件 #08 — 新身体の試着",
+      desc: "生成の自由 × 不可逆変更 × 子どもの同意。試着と変更は、別の契約で。",
+      systemId: "covenant",
+      contentHtml: `<div id="event08-form">${buildEvent08Form(selected)}</div>`,
+      actions: [
+        {
+          label: "フォージで試行を開始する（3年後に再訪）",
+          action: () => {
+            document.querySelectorAll("#event08-form input").forEach((input) => {
+              if (input.checked) state.flags[`ev08_${input.dataset.key}`] = true;
+            });
+            state.flags.ev08_done = true;
+            state.event08Sim = simulateEvent08(state);
+            if (state.flags.ev08_minorConsent) bumpTrust(state, "children", 2);
+            if (state.flags.ev08_reversibleTrial) bumpTrust(state, "sen", 1);
+            go("event08_revisit");
+          },
+        },
+      ],
+    });
+
+    document.getElementById("system-content").addEventListener("change", (e) => {
+      if (e.target.type === "checkbox") {
+        const key = e.target.dataset.key;
+        if (e.target.checked) selected.add(key);
+        else selected.delete(key);
+      }
+    });
+  }
+
+  function renderForgeTryon() {
+    renderSystem({
+      title: "SYS-07 — 身体試着",
+      desc: "ジェネシス・フォージの身体的実践。視覚・触覚・平衡に5点配分——14日で元に戻れる。",
+      systemId: "embodied",
+      contentHtml: `<div id="forge-tryon-root"></div>`,
+      actions: [],
+    });
+
+    const root = document.getElementById("forge-tryon-root");
+    mountForgeTryon(root, {
+      onComplete: (result) => {
+        state.forgeTryonResult = result;
+        state.flags.forge_tryon_done = true;
+        if (result.profile === "balanced") bumpTrust(state, "children", 1);
+        else if (result.profile === "extreme") {
+          bumpTrust(state, "children", -1);
+          bumpTrust(state, "sen", 1);
+        }
+        go("event08_tryon_result");
+      },
+      onSkip: () => renderEvent08Covenant(),
+    });
+  }
+
   function renderEvent12Covenant() {
     const selected = new Set(["noCommand", "periodicVote", "minorityWitness"]);
 
@@ -540,6 +607,10 @@ export function createGame() {
       reasons.push(getEvent07Reason());
     }
 
+    if (state.flags.ev08_done) {
+      reasons.push(getEvent08Reason());
+    }
+
     if (state.flags.ev12_done) {
       reasons.push(...getEvent12Reasons());
     }
@@ -575,6 +646,7 @@ export function createGame() {
           ${state.flags.ev05_done ? `<span class="tag ${picked.has("haru") ? "active" : ""}">終わらない庭</span>` : ""}
           ${state.flags.ev06_done ? `<span class="tag ${picked.has("io") ? "active" : ""}">切れる共有</span>` : ""}
           ${state.flags.ev07_done ? `<span class="tag ${picked.has("nagi") ? "active" : ""}">未命名の驚異</span>` : ""}
+          ${state.flags.ev08_done ? `<span class="tag ${picked.has("child") ? "active" : ""}">試着と同意</span>` : ""}
           ${state.flags.ev12_done ? `<span class="tag ${picked.has("kaede") ? "active" : ""}">命令しない神</span>` : ""}
           ${state.flags.atelier_improv_done ? `<span class="tag ${picked.has("soli") ? "active" : ""}">一度きりの即興</span>` : ""}
         </div>

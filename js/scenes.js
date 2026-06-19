@@ -18,6 +18,10 @@ import {
   getFeaturedQuote as getEvent07Quote,
 } from "./covenant-event-07.js";
 import {
+  renderOutcomeCards as renderEvent08Cards,
+  getFeaturedQuote as getEvent08Quote,
+} from "./covenant-event-08.js";
+import {
   renderOutcomeCards as renderEvent12Cards,
   getFeaturedQuote as getEvent12Quote,
 } from "./covenant-event-12.js";
@@ -33,7 +37,10 @@ export function getSceneHandlers(game) {
     renderEvent05Covenant,
     renderEvent06Covenant,
     renderEvent07Covenant,
+    renderEvent08Covenant,
     renderEvent12Covenant,
+    renderAtelierImprov,
+    renderForgeTryon,
     renderDeliberation,
     renderEndingPicker,
     renderEpilogue,
@@ -473,12 +480,96 @@ export function getSceneHandlers(game) {
             action: () => go("event07_intro"),
           },
           {
+            label: "ジェネシス・フォージ — 新身体の試着（事件 #08）",
+            hint: "生成の自由 × 不可逆変更 × 子どもの同意",
+            action: () => go("event08_intro"),
+          },
+          {
             label: "ホライズン — 出発憲章の試行（事件 #03）",
             hint: "未来人の同意を制度として組む",
             action: () => renderCovenant(),
           },
         ],
       }),
+
+    event08_intro: () =>
+      go({
+        chapter: "第三章",
+        title: "新身体の試着",
+        body: `
+          <p>水星・ジェネシス・フォージ。ここでは、新しい身体・感覚・生物種が試される——未来への贈り物か、勝手な設計か。</p>
+          ${state.refusal === "immortality" ? "<p>あなたは<strong>永遠の生命</strong>を拒んだ。不可逆変更の重さが、ここでは日常だ。</p>" : ""}
+          ${state.refusal === "family" ? "<p>あなたは<strong>家族</strong>を拒んだ。子ども代表が言う。「身体の継承も、血縁で縛らないで」</p>" : ""}
+          ${say("child", "試着は14日で戻せる。不可逆変更は、別の契約——それを、条文に書いて。")}
+          ${say("lin", "設計図を公開しなければ、未来は盲目的になる——ただし、読める者が限られることもある。")}
+          <p>3D空間で<strong>試着室</strong>へ近づき、<strong>E</strong>で調べてから、身体試着または条項設計へ。</p>
+        `,
+        period: 3,
+        location: "ジェネシス・フォージ",
+        mood: "forge",
+        art: "forge",
+        speaker: "child",
+        choices: [
+          {
+            label: "身体試着 — 感覚3軸を配分する（SYS-07）",
+            hint: "視覚・触覚・平衡に5点配分。14日で戻れる",
+            action: () => renderForgeTryon(),
+          },
+          {
+            label: "試着せず — 条項だけ組む",
+            action: () => renderEvent08Covenant(),
+          },
+        ],
+      }),
+
+    event08_tryon_result: () => {
+      const r = state.forgeTryonResult;
+      go({
+        chapter: "第三章",
+        title: "試着のあと",
+        body: `
+          <p>試着ID <code>${r?.signature || "—"}</code> — 14日後、元の身体に戻る。</p>
+          <p class="sim-lead">${r?.lead || ""}</p>
+          ${say("child", "戻れる試着と、戻れない変更——その境界を、共同体で守ろう。")}
+          <p>フォージの条項を、これから組む。</p>
+        `,
+        location: "ジェネシス・フォージ",
+        mood: "forge",
+        art: "forge",
+        speaker: "child",
+        choices: [{ label: "コヴナント・グラマー — フォージの条項を組む", action: () => renderEvent08Covenant() }],
+      });
+    },
+
+    event08_revisit: () => {
+      const sim = state.event08Sim || { summary: "", outcomes: [], tension: "medium" };
+      const quote = getEvent08Quote(sim);
+      go({
+        chapter: "第三章",
+        title: "新身体の試着 — 三年後",
+        body: `
+          <p class="sim-lead">${sim.summary}</p>
+          ${renderEvent08Cards(sim.outcomes)}
+          <p>可逆試着、未成年同意、設計公開——条項は実行されたが、一部は「限定公開」という抜け道を invent した。</p>
+          ${quote ? say(quote.npc, quote.quote) : ""}
+          <p>フォージでの経験は、出発憲章にも影響を与えるだろう。</p>
+        `,
+        period: 3,
+        location: "ジェネシス・フォージ",
+        mood: sim.tension === "high" ? "vow" : "forge",
+        art: "forge",
+        speaker: quote?.npc,
+        choices: [
+          {
+            label: "ホライズンへ — 出発憲章の試行を始める",
+            action: () => {
+              state.location = "ホライズン";
+              renderCovenant();
+            },
+          },
+        ],
+      });
+    },
 
     event04_intro: () =>
       go({
