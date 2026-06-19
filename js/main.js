@@ -41,6 +41,7 @@ import {
   getDeliberationReason as getEvent07Reason,
 } from "./covenant-event-07.js";
 import {
+  buildClauseForm as buildEvent12Form,
   simulateEvent12,
   getDeliberationReasons as getEvent12Reasons,
   canUnlockMosaicEnding,

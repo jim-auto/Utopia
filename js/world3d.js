@@ -4,6 +4,13 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
 import { buildPlayerModel } from "./player-model.js";
+import {
+  WORLD_CONFIG,
+  createSkyMesh,
+  updateSkyMesh,
+  buildWorldEnvironment,
+  applyWorldLighting,
+} from "./world-environments.js";
 
 let renderer;
 let labelRenderer;
@@ -15,6 +22,8 @@ let playerShadow;
 let playerWalkPhase = 0;
 let worldRoot;
 let skyMesh;
+let sunLight;
+let hemiLight;
 let rafId = null;
 let visible = false;
 let explorationEnabled = false;
@@ -39,65 +48,6 @@ let firstPerson = false;
 let nearestInteract = null;
 let onDiscover = null;
 const discoveredIds = new Set();
-
-const WORLD_CONFIG = {
-  garden: {
-    fog: 0.032,
-    fogColor: "#0a1410",
-    skyTop: "#1a3828",
-    skyBottom: "#060c0a",
-    sun: 0.75,
-    bloom: 0.35,
-  },
-  horizon: {
-    fog: 0.018,
-    fogColor: "#050810",
-    skyTop: "#122a45",
-    skyBottom: "#030508",
-    sun: 0.55,
-    bloom: 0.65,
-  },
-  chorus: {
-    fog: 0.04,
-    fogColor: "#180818",
-    skyTop: "#402030",
-    skyBottom: "#100810",
-    sun: 0.5,
-    bloom: 0.5,
-  },
-  palimpsest: {
-    fog: 0.038,
-    fogColor: "#0c0a18",
-    skyTop: "#2a2848",
-    skyBottom: "#080810",
-    sun: 0.45,
-    bloom: 0.4,
-  },
-  atelier: {
-    fog: 0.035,
-    fogColor: "#140808",
-    skyTop: "#402018",
-    skyBottom: "#100808",
-    sun: 0.6,
-    bloom: 0.45,
-  },
-  council: {
-    fog: 0.028,
-    fogColor: "#080a12",
-    skyTop: "#203048",
-    skyBottom: "#060810",
-    sun: 0.5,
-    bloom: 0.42,
-  },
-  abyss: {
-    fog: 0.045,
-    fogColor: "#040810",
-    skyTop: "#0c3040",
-    skyBottom: "#020408",
-    sun: 0.35,
-    bloom: 0.55,
-  },
-};
 
 const NPC_LABELS = {
   aster: "アスター",
@@ -152,74 +102,18 @@ const WORLD_DISCOVERIES = {
   },
 };
 
-function seededRandom(seed) {
-  let s = seed >>> 0;
-  return () => {
-    s = (s * 1664525 + 1013904223) >>> 0;
-    return s / 4294967296;
-  };
-}
-
-function readAccent() {
-  return getComputedStyle(document.documentElement).getPropertyValue("--mood-accent").trim() || "#6ec8e8";
-}
-
-function makeLabel(text, className = "world-label") {
-  const el = document.createElement("div");
-  el.className = className;
-  el.textContent = text;
-  return new CSS2DObject(el);
-}
-
 function applyWorldAtmosphere(worldId) {
   const cfg = WORLD_CONFIG[worldId] || WORLD_CONFIG.garden;
   scene.fog = new THREE.FogExp2(cfg.fogColor, cfg.fog);
   scene.background = new THREE.Color(cfg.fogColor);
 
-  if (skyMesh) {
-    skyMesh.material.uniforms.topColor.value.set(cfg.skyTop);
-    skyMesh.material.uniforms.bottomColor.value.set(cfg.skyBottom);
-  }
+  updateSkyMesh(skyMesh, worldId, readAccent(), elapsed);
+  applyWorldLighting(worldId, sunLight, hemiLight);
 
   if (composer) {
     const bloom = composer.passes[1];
     if (bloom) bloom.strength = cfg.bloom;
   }
-}
-
-function createSky() {
-  const geo = new THREE.SphereGeometry(90, 32, 16);
-  const mat = new THREE.ShaderMaterial({
-    side: THREE.BackSide,
-    depthWrite: false,
-    uniforms: {
-      topColor: { value: new THREE.Color("#122a45") },
-      bottomColor: { value: new THREE.Color("#050810") },
-      offset: { value: 8 },
-      exponent: { value: 0.55 },
-    },
-    vertexShader: `
-      varying vec3 vWorldPosition;
-      void main() {
-        vec4 wp = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = wp.xyz;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 topColor;
-      uniform vec3 bottomColor;
-      uniform float offset;
-      uniform float exponent;
-      varying vec3 vWorldPosition;
-      void main() {
-        float h = normalize(vWorldPosition + offset).y;
-        gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
-      }
-    `,
-  });
-  skyMesh = new THREE.Mesh(geo, mat);
-  scene.add(skyMesh);
 }
 
 function clearWorld() {
@@ -235,420 +129,16 @@ function clearWorld() {
   worldRoot = null;
 }
 
-function addGround(group, color, size = 48, accent) {
-  const ground = new THREE.Mesh(
-    new THREE.CircleGeometry(size, 64),
-    new THREE.MeshStandardMaterial({ color, roughness: 0.94, metalness: 0.04 })
-  );
-  ground.rotation.x = -Math.PI / 2;
-  ground.receiveShadow = true;
-  group.add(ground);
-
-  const ring = new THREE.Mesh(
-    new THREE.RingGeometry(size * 0.92, size * 0.94, 64),
-    new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0.12, side: THREE.DoubleSide })
-  );
-  ring.rotation.x = -Math.PI / 2;
-  ring.position.y = 0.02;
-  group.add(ring);
+function readAccent() {
+  return getComputedStyle(document.documentElement).getPropertyValue("--mood-accent").trim() || "#6ec8e8";
 }
 
-function addTrees(group, count, color, seed = 1) {
-  const rand = seededRandom(seed);
-  for (let i = 0; i < count; i++) {
-    const tree = new THREE.Group();
-    const trunk = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.12, 0.18, 1.2, 6),
-      new THREE.MeshStandardMaterial({ color: "#4a3528", roughness: 0.9 })
-    );
-    trunk.position.y = 0.6;
-    trunk.castShadow = true;
-    const crown = new THREE.Mesh(
-      new THREE.ConeGeometry(0.85 + rand() * 0.3, 2 + rand() * 0.5, 7),
-      new THREE.MeshStandardMaterial({ color, roughness: 0.88 })
-    );
-    crown.position.y = 2.1;
-    crown.castShadow = true;
-    tree.add(trunk, crown);
-    const angle = rand() * Math.PI * 2;
-    const radius = 9 + rand() * 13;
-    tree.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
-    tree.rotation.y = rand() * Math.PI;
-    group.add(tree);
-  }
+function makeLabel(text, className = "world-label") {
+  const el = document.createElement("div");
+  el.className = className;
+  el.textContent = text;
+  return new CSS2DObject(el);
 }
-
-function addLanterns(group, accent) {
-  for (let i = 0; i < 10; i++) {
-    const x = -12 + i * 2.6;
-    const z = -5 + (i % 2) * 10;
-    const pole = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.05, 0.07, 2.4, 6),
-      new THREE.MeshStandardMaterial({ color: "#3a3028" })
-    );
-    pole.position.set(x, 1.2, z);
-    const lamp = new THREE.Mesh(
-      new THREE.SphereGeometry(0.2, 10, 10),
-      new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 1.2 })
-    );
-    lamp.position.set(x, 2.5, z);
-    const light = new THREE.PointLight(accent, 0.55, 9);
-    light.position.copy(lamp.position);
-    group.add(pole, lamp, light);
-    group.userData.animated.push({
-      mesh: lamp,
-      light,
-      phase: i * 0.7,
-      type: "pulse",
-    });
-  }
-}
-
-function addParticles(group, count, color, spread, height, seed = 7) {
-  const rand = seededRandom(seed);
-  const positions = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) {
-    positions[i * 3] = (rand() - 0.5) * spread;
-    positions[i * 3 + 1] = rand() * height + 0.5;
-    positions[i * 3 + 2] = (rand() - 0.5) * spread;
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  const mat = new THREE.PointsMaterial({
-    color,
-    size: 0.12,
-    transparent: true,
-    opacity: 0.55,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-  });
-  const points = new THREE.Points(geo, mat);
-  group.add(points);
-  group.userData.animated.push({ mesh: points, type: "drift", speed: 0.35 });
-}
-
-function buildGarden(accent) {
-  const group = new THREE.Group();
-  group.userData.animated = [];
-  addGround(group, "#1a2e22", 46, accent);
-  addTrees(group, 18, "#2d5a3a", 11);
-  addLanterns(group, accent);
-  addParticles(group, 80, accent, 30, 4, 19);
-
-  const path = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.2, 22),
-    new THREE.MeshStandardMaterial({ color: "#2a4030", roughness: 0.96 })
-  );
-  path.rotation.x = -Math.PI / 2;
-  path.position.y = 0.015;
-  group.add(path);
-
-  const arch = new THREE.Mesh(
-    new THREE.TorusGeometry(2.4, 0.14, 10, 32, Math.PI),
-    new THREE.MeshStandardMaterial({
-      color: accent,
-      emissive: accent,
-      emissiveIntensity: 0.45,
-      metalness: 0.35,
-      roughness: 0.35,
-    })
-  );
-  arch.position.set(0, 2.3, -8);
-  group.add(arch);
-  group.userData.animated.push({ mesh: arch, type: "gatePulse" });
-
-  const landmark = makeLabel(WORLD_LANDMARKS.garden.label, "world-label world-label-landmark");
-  landmark.position.set(0, 3.6, -8);
-  group.add(landmark);
-
-  return group;
-}
-
-function buildHorizon(accent) {
-  const group = new THREE.Group();
-  group.userData.animated = [];
-  addGround(group, "#0a1018", 58, accent);
-
-  const platform = new THREE.Mesh(
-    new THREE.CylinderGeometry(7, 8, 0.45, 40),
-    new THREE.MeshStandardMaterial({ color: "#1a2430", metalness: 0.45, roughness: 0.45 })
-  );
-  platform.position.y = 0.22;
-  platform.receiveShadow = true;
-  group.add(platform);
-
-  const gate = new THREE.Mesh(
-    new THREE.TorusGeometry(3.4, 0.2, 20, 80),
-    new THREE.MeshStandardMaterial({
-      color: accent,
-      emissive: accent,
-      emissiveIntensity: 0.75,
-      metalness: 0.65,
-      roughness: 0.2,
-    })
-  );
-  gate.position.set(0, 3.6, -10);
-  group.add(gate);
-  group.userData.animated.push({ mesh: gate, type: "gateSpin" });
-
-  const inner = new THREE.Mesh(
-    new THREE.TorusGeometry(2.4, 0.06, 12, 64),
-    new THREE.MeshStandardMaterial({
-      color: "#ffffff",
-      emissive: accent,
-      emissiveIntensity: 0.9,
-      transparent: true,
-      opacity: 0.5,
-    })
-  );
-  inner.position.copy(gate.position);
-  group.add(inner);
-  group.userData.animated.push({ mesh: inner, type: "gateSpinReverse" });
-
-  const gateLight = new THREE.PointLight(accent, 1.4, 35);
-  gateLight.position.copy(gate.position);
-  group.add(gateLight);
-
-  addParticles(group, 120, accent, 55, 25, 31);
-
-  const landmark = makeLabel(WORLD_LANDMARKS.horizon.label, "world-label world-label-landmark");
-  landmark.position.set(0, 5.2, -10);
-  group.add(landmark);
-
-  return group;
-}
-
-function buildChorus(accent) {
-  const group = new THREE.Group();
-  group.userData.animated = [];
-  addGround(group, "#201018", 42, accent);
-
-  [[-4.5, -3], [4.5, -3], [0, 4.5]].forEach(([x, z], i) => {
-    const orb = new THREE.Mesh(
-      new THREE.SphereGeometry(2.1, 28, 28),
-      new THREE.MeshStandardMaterial({
-        color: accent,
-        transparent: true,
-        opacity: 0.32,
-        emissive: accent,
-        emissiveIntensity: 0.45,
-      })
-    );
-    orb.position.set(x, 2.2, z);
-    group.add(orb);
-    group.userData.animated.push({ mesh: orb, type: "float", phase: i * 1.4, amp: 0.35 });
-  });
-
-  const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(5.5, 0.07, 10, 64),
-    new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 0.55 })
-  );
-  ring.rotation.x = Math.PI / 2;
-  ring.position.y = 0.06;
-  group.add(ring);
-  group.userData.animated.push({ mesh: ring, type: "slowSpin" });
-
-  addParticles(group, 60, accent, 18, 6, 43);
-
-  const landmark = makeLabel(WORLD_LANDMARKS.chorus.label, "world-label world-label-landmark");
-  landmark.position.set(0, 4.2, 0);
-  group.add(landmark);
-
-  return group;
-}
-
-function buildPalimpsest(accent) {
-  const group = new THREE.Group();
-  group.userData.animated = [];
-  addGround(group, "#12101e", 44, accent);
-
-  const ringGroup = new THREE.Group();
-  for (let i = 0; i < 20; i++) {
-    const slab = new THREE.Mesh(
-      new THREE.BoxGeometry(1.5, 2.6, 0.1),
-      new THREE.MeshStandardMaterial({
-        color: i % 2 ? "#2a2840" : "#3a3860",
-        emissive: i % 3 ? accent : "#000000",
-        emissiveIntensity: i % 3 ? 0.22 : 0,
-        roughness: 0.75,
-      })
-    );
-    const angle = (i / 20) * Math.PI * 2;
-    slab.position.set(Math.cos(angle) * 7.5, 1.3, Math.sin(angle) * 7.5);
-    slab.lookAt(0, 1.3, 0);
-    ringGroup.add(slab);
-  }
-  group.add(ringGroup);
-  group.userData.animated.push({ mesh: ringGroup, type: "slowSpin" });
-
-  const core = new THREE.Mesh(
-    new THREE.OctahedronGeometry(1.3, 0),
-    new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 0.5 })
-  );
-  core.position.y = 2.2;
-  group.add(core);
-  group.userData.animated.push({ mesh: core, type: "float", phase: 0, amp: 0.2 });
-
-  const landmark = makeLabel(WORLD_LANDMARKS.palimpsest.label, "world-label world-label-landmark");
-  landmark.position.set(0, 3.8, 0);
-  group.add(landmark);
-
-  return group;
-}
-
-function buildAtelier(accent) {
-  const group = new THREE.Group();
-  group.userData.animated = [];
-  addGround(group, "#281018", 44, accent);
-
-  const stage = new THREE.Mesh(
-    new THREE.BoxGeometry(11, 0.55, 7),
-    new THREE.MeshStandardMaterial({ color: "#3a2028", roughness: 0.82 })
-  );
-  stage.position.set(0, 0.28, -4);
-  stage.receiveShadow = true;
-  group.add(stage);
-
-  const shell = new THREE.Mesh(
-    new THREE.SphereGeometry(5, 20, 16, 0, Math.PI * 2, 0, Math.PI / 2.1),
-    new THREE.MeshStandardMaterial({
-      color: accent,
-      transparent: true,
-      opacity: 0.18,
-      side: THREE.DoubleSide,
-      emissive: accent,
-      emissiveIntensity: 0.25,
-    })
-  );
-  shell.position.set(0, 0, -4);
-  group.add(shell);
-
-  for (let i = 0; i < 6; i++) {
-    const seat = new THREE.Mesh(
-      new THREE.BoxGeometry(0.85, 0.45, 0.85),
-      new THREE.MeshStandardMaterial({ color: "#402830" })
-    );
-    seat.position.set(-5 + i * 2, 0.22, 4);
-    group.add(seat);
-  }
-
-  const spotlight = new THREE.SpotLight(accent, 1.2, 30, 0.45, 0.5);
-  spotlight.position.set(0, 8, 2);
-  spotlight.target.position.set(0, 0, -4);
-  group.add(spotlight, spotlight.target);
-  group.userData.animated.push({ mesh: spotlight, type: "spotSweep" });
-
-  const landmark = makeLabel(WORLD_LANDMARKS.atelier.label, "world-label world-label-landmark");
-  landmark.position.set(0, 4, -4);
-  group.add(landmark);
-
-  return group;
-}
-
-function buildCouncil(accent) {
-  const group = new THREE.Group();
-  group.userData.animated = [];
-  addGround(group, "#101820", 48, accent);
-
-  for (let i = 0; i < 10; i++) {
-    const pillar = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.32, 0.42, 5.5, 10),
-      new THREE.MeshStandardMaterial({ color: "#1a2838", metalness: 0.35, roughness: 0.55 })
-    );
-    const angle = (i / 10) * Math.PI * 2;
-    pillar.position.set(Math.cos(angle) * 10, 2.75, Math.sin(angle) * 10);
-    pillar.castShadow = true;
-    group.add(pillar);
-  }
-
-  const table = new THREE.Mesh(
-    new THREE.CylinderGeometry(3.8, 3.8, 0.35, 32),
-    new THREE.MeshStandardMaterial({ color: "#243040", metalness: 0.3, roughness: 0.5 })
-  );
-  table.position.y = 0.18;
-  group.add(table);
-
-  const mosaic = new THREE.Mesh(
-    new THREE.CircleGeometry(2.2, 32),
-    new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 0.55 })
-  );
-  mosaic.rotation.x = -Math.PI / 2;
-  mosaic.position.y = 0.36;
-  group.add(mosaic);
-  group.userData.animated.push({ mesh: mosaic, type: "gatePulse" });
-
-  const landmark = makeLabel(WORLD_LANDMARKS.council.label, "world-label world-label-landmark");
-  landmark.position.set(0, 3.2, 0);
-  group.add(landmark);
-
-  return group;
-}
-
-function buildAbyss(accent) {
-  const group = new THREE.Group();
-  group.userData.animated = [];
-  addGround(group, "#0a1820", 44, accent);
-
-  const trench = new THREE.Mesh(
-    new THREE.CylinderGeometry(3.5, 5, 0.8, 32, 1, true),
-    new THREE.MeshStandardMaterial({
-      color: "#020608",
-      emissive: accent,
-      emissiveIntensity: 0.15,
-      side: THREE.DoubleSide,
-    })
-  );
-  trench.position.set(0, -0.2, -6);
-  group.add(trench);
-
-  for (let i = 0; i < 12; i++) {
-    const pillar = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.08, 0.14, 2.5 + (i % 3) * 0.8, 6),
-      new THREE.MeshStandardMaterial({
-        color: accent,
-        emissive: accent,
-        emissiveIntensity: 0.55,
-        transparent: true,
-        opacity: 0.75,
-      })
-    );
-    const angle = (i / 12) * Math.PI * 2;
-    pillar.position.set(Math.cos(angle) * 8, 1.2, -6 + Math.sin(angle) * 5);
-    group.add(pillar);
-    group.userData.animated.push({ mesh: pillar, type: "pulse", phase: i * 0.5 });
-  }
-
-  const ice = new THREE.Mesh(
-    new THREE.BoxGeometry(14, 0.3, 10),
-    new THREE.MeshStandardMaterial({
-      color: "#1a3040",
-      transparent: true,
-      opacity: 0.6,
-      roughness: 0.2,
-      metalness: 0.1,
-    })
-  );
-  ice.position.set(0, 0.12, -2);
-  group.add(ice);
-
-  addParticles(group, 90, accent, 35, 8, 59);
-
-  const landmark = makeLabel(WORLD_LANDMARKS.abyss.label, "world-label world-label-landmark");
-  landmark.position.set(0, 2.8, -6);
-  group.add(landmark);
-
-  return group;
-}
-
-const WORLD_BUILDERS = {
-  garden: buildGarden,
-  horizon: buildHorizon,
-  chorus: buildChorus,
-  palimpsest: buildPalimpsest,
-  atelier: buildAtelier,
-  council: buildCouncil,
-  abyss: buildAbyss,
-};
 
 export function mapSceneToWorld({ art, mood, location } = {}) {
   const loc = location || "";
@@ -740,7 +230,7 @@ function setNpcBeacon(worldId, speaker) {
 }
 
 function loadWorld(worldId, force = false) {
-  const id = WORLD_BUILDERS[worldId] ? worldId : "garden";
+  const id = WORLD_CONFIG[worldId] ? worldId : "garden";
   if (id === currentWorldId && worldRoot && !force) {
     applyWorldAtmosphere(id);
     updatePlayerAccent();
@@ -751,7 +241,14 @@ function loadWorld(worldId, force = false) {
   clearNpcBeacon();
   currentWorldId = id;
   const accent = readAccent();
-  worldRoot = WORLD_BUILDERS[id](accent);
+  const lm = WORLD_LANDMARKS[id];
+
+  worldRoot = buildWorldEnvironment(id, accent, (group, pos) => {
+    if (!lm) return;
+    const label = makeLabel(lm.label, "world-label world-label-landmark");
+    label.position.set(pos[0], pos[1], pos[2]);
+    group.add(label);
+  });
   scene.add(worldRoot);
   applyWorldAtmosphere(id);
 
@@ -1118,10 +615,19 @@ function animateWorld(dt) {
         item.mesh.rotation.z -= dt * 0.08;
         break;
       case "slowSpin":
-        item.mesh.rotation.y += dt * 0.06;
+        item.mesh.rotation.y += dt * (item.speed || 0.06);
         break;
       case "float":
-        item.mesh.position.y = 2.2 + Math.sin(t * 1.2) * (item.amp || 0.3);
+      case "floatAt":
+        item.mesh.position.y =
+          (item.baseY ?? 2.2) + Math.sin(t * 1.2) * (item.amp || 0.3);
+        break;
+      case "sway":
+        item.mesh.rotation.z = Math.sin(t * 0.9 + (item.phase || 0)) * (item.amp || 0.08);
+        break;
+      case "caustics":
+        item.mesh.material.emissiveIntensity = 0.12 + Math.sin(t * 2.2) * 0.08;
+        item.mesh.material.opacity = 0.28 + Math.sin(t * 1.8) * 0.1;
         break;
       case "drift":
         item.mesh.rotation.y += dt * item.speed * 0.15;
@@ -1150,6 +656,7 @@ function tick() {
   updateCamera(dt);
   animateWorld(dt);
   updateProximityHint();
+  updateSkyMesh(skyMesh, currentWorldId, readAccent(), elapsed);
 
   composer.render();
   labelRenderer.render(scene, camera);
@@ -1185,25 +692,26 @@ export function initWorld3d() {
   wrap.appendChild(labelRenderer.domElement);
 
   scene = new THREE.Scene();
-  createSky();
+  skyMesh = createSkyMesh();
+  scene.add(skyMesh);
 
   camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.15, 140);
   camera.position.set(0, 6, 12);
 
-  const hemi = new THREE.HemisphereLight("#a8c8e8", "#1a1020", 0.85);
-  scene.add(hemi);
+  hemiLight = new THREE.HemisphereLight("#a8c8e8", "#1a1020", 0.85);
+  scene.add(hemiLight);
 
-  const sun = new THREE.DirectionalLight("#fff8f0", 0.9);
-  sun.position.set(10, 18, 8);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.camera.near = 1;
-  sun.shadow.camera.far = 40;
-  sun.shadow.camera.left = -18;
-  sun.shadow.camera.right = 18;
-  sun.shadow.camera.top = 18;
-  sun.shadow.camera.bottom = -18;
-  scene.add(sun);
+  sunLight = new THREE.DirectionalLight("#fff8f0", 0.9);
+  sunLight.position.set(10, 18, 8);
+  sunLight.castShadow = true;
+  sunLight.shadow.mapSize.set(2048, 2048);
+  sunLight.shadow.camera.near = 1;
+  sunLight.shadow.camera.far = 40;
+  sunLight.shadow.camera.left = -18;
+  sunLight.shadow.camera.right = 18;
+  sunLight.shadow.camera.top = 18;
+  sunLight.shadow.camera.bottom = -18;
+  scene.add(sunLight);
 
   const built = buildPlayerModel(readAccent());
   player = built.group;

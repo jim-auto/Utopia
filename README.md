@@ -70,7 +70,7 @@ npx serve .
 
 ```
 index.html          # ブラウザ版プロトタイプ（Three.js import map）
-css/  js/           # ゲーム本体（js/world3d.js = 3D世界）
+css/  js/           # ゲーム本体（js/world3d.js, js/player-model.js）
 docs/
   gdd/              # 企画・世界観・物語
   systems/          # システム仕様
