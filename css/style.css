@@ -37,6 +37,37 @@ html, body {
 
 body { overflow-x: hidden; }
 
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 75% 65% at 50% 45%, transparent 35%, rgba(0, 0, 0, 0.42) 100%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.15), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.25));
+  transition: opacity 1s ease;
+}
+
+body[data-mood="garden"]::after {
+  background:
+    radial-gradient(ellipse 75% 65% at 50% 45%, transparent 38%, rgba(4, 12, 8, 0.38) 100%),
+    linear-gradient(to bottom, rgba(6, 14, 10, 0.12), transparent 20%, transparent 80%, rgba(4, 10, 8, 0.22));
+}
+
+body[data-mood="mars"]::after,
+body[data-mood="vow"]::after {
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 42%, transparent 32%, rgba(20, 8, 6, 0.45) 100%),
+    linear-gradient(to bottom, rgba(16, 6, 4, 0.18), transparent 18%, transparent 82%, rgba(12, 4, 4, 0.28));
+}
+
+body[data-mood="finale"]::after {
+  background:
+    radial-gradient(ellipse 80% 70% at 50% 40%, transparent 30%, rgba(12, 8, 20, 0.4) 100%),
+    linear-gradient(to bottom, rgba(20, 12, 28, 0.2), transparent 15%, transparent 85%, rgba(8, 4, 16, 0.3));
+}
+
 #world3d-wrap {
   position: fixed;
   inset: 0;
@@ -370,6 +401,25 @@ body.mode-3d .system-hero-wrap {
   display: none;
 }
 
+body.mode-3d .system-panel .system-hero-wrap {
+  display: block;
+  height: 88px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body.mode-3d .system-panel .scene-hero {
+  padding: 0.35rem 0.75rem;
+  background:
+    radial-gradient(ellipse 80% 100% at 50% 100%, var(--mood-glow), transparent),
+    rgba(0, 0, 0, 0.35);
+}
+
+body.mode-3d .system-panel .scene-svg-traditional {
+  width: min(100%, 320px);
+  max-height: 76px;
+}
+
 body.mode-3d .sidebar {
   display: none;
 }
@@ -439,7 +489,14 @@ body.mode-3d .title-screen .stage {
 
 body.mode-3d .title-screen .scene-hero-wrap {
   display: block;
-  height: 160px;
+  height: 200px;
+}
+
+body.mode-3d .title-screen .scene-hero {
+  background:
+    radial-gradient(ellipse 80% 90% at 50% 100%, var(--mood-glow), transparent),
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(232, 192, 104, 0.06), transparent),
+    rgba(0, 0, 0, 0.28);
 }
 
 @media (max-width: 900px) {
@@ -510,16 +567,24 @@ body.mode-3d .title-screen .scene-hero-wrap {
   background:
     radial-gradient(ellipse 90% 60% at 50% -5%, var(--mood-glow), transparent 55%),
     radial-gradient(ellipse 50% 40% at 100% 100%, rgba(232, 192, 104, 0.06), transparent),
+    radial-gradient(ellipse 40% 30% at 0% 80%, var(--mood-glow), transparent 50%),
     linear-gradient(165deg, var(--grad-a) 0%, var(--grad-b) 45%, var(--grad-c) 100%);
-  transition: background 1.2s ease;
+  transition: background 1.4s ease, opacity 0.8s ease;
   pointer-events: none;
   z-index: 0;
+  animation: ambientBreath 12s ease-in-out infinite;
+}
+
+@keyframes ambientBreath {
+  0%, 100% { opacity: 1; filter: saturate(1); }
+  50% { opacity: 0.92; filter: saturate(1.08); }
 }
 
 .grain {
   position: fixed;
   inset: 0;
-  opacity: 0.04;
+  opacity: 0.055;
+  mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 1;
@@ -619,6 +684,14 @@ body.mode-3d .title-screen .scene-hero-wrap {
   box-shadow: var(--shadow);
   backdrop-filter: var(--glass-blur);
   animation: panelIn 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: border-color 0.6s ease, box-shadow 0.6s ease;
+}
+
+.panel:hover {
+  border-color: color-mix(in srgb, var(--mood-accent) 18%, var(--bg-panel-border));
+  box-shadow:
+    var(--shadow),
+    0 0 40px color-mix(in srgb, var(--mood-glow) 35%, transparent);
 }
 
 .panel::before {
@@ -642,36 +715,67 @@ body.mode-3d .title-screen .scene-hero-wrap {
 
 .scene-hero-wrap {
   position: relative;
-  height: 200px;
+  height: 220px;
   overflow: hidden;
   border-bottom: 1px solid var(--bg-panel-border);
+  background: linear-gradient(180deg, rgba(244, 236, 216, 0.03), transparent 40%);
 }
 
-.system-hero-wrap { height: 140px; }
+.scene-hero-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 3px,
+    rgba(255, 255, 255, 0.012) 3px,
+    rgba(255, 255, 255, 0.012) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.system-hero-wrap { height: 150px; }
 
 .scene-hero {
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   background:
-    radial-gradient(ellipse 70% 80% at 50% 100%, var(--mood-glow), transparent),
-    rgba(0, 0, 0, 0.2);
+    radial-gradient(ellipse 75% 90% at 50% 100%, var(--mood-glow), transparent 65%),
+    radial-gradient(ellipse 50% 40% at 50% 20%, rgba(232, 192, 104, 0.04), transparent),
+    rgba(0, 0, 0, 0.22);
 }
 
 .scene-hero-fade {
   position: absolute;
   inset: auto 0 0 0;
-  height: 60%;
+  height: 65%;
   background: linear-gradient(to top, var(--bg-panel), transparent);
   pointer-events: none;
+  z-index: 2;
 }
 
 .scene-svg {
-  width: min(100%, 420px);
+  width: min(100%, 440px);
   height: auto;
-  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.35));
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.4));
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease;
+}
+
+.panel:not(.title-screen) .scene-hero:hover .scene-svg {
+  transform: scale(1.015);
+  filter: drop-shadow(0 14px 32px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 24px var(--mood-glow));
+}
+
+.scene-svg-traditional {
+  filter:
+    drop-shadow(0 10px 28px rgba(0, 0, 0, 0.45))
+    sepia(0.12)
+    contrast(1.04);
 }
 
 .spin-slow { animation: spin 28s linear infinite; transform-origin: center; }

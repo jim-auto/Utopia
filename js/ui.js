@@ -1,6 +1,7 @@
 import {
   setMood,
   renderSceneHero,
+  renderSystemHero,
   getSceneArtHtml,
   animateSceneText,
   updatePeriodProgress,
@@ -183,8 +184,7 @@ export function renderSystem({ title, desc, contentHtml, actions = [], systemId 
   setExplorationEnabled(false);
   setWorldFromScene({ art: meta.art, mood: meta.mood });
 
-  const hero = document.getElementById("system-hero");
-  if (hero) hero.innerHTML = "";
+  renderSystemHero(meta.art);
 
   const badge = document.getElementById("system-badge");
   if (badge) badge.textContent = meta.badge;
