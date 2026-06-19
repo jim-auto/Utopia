@@ -66,6 +66,11 @@ import {
   getDeliberationReason as getEvent11Reason,
 } from "./covenant-event-11.js";
 import {
+  buildClauseForm as buildEvent13Form,
+  simulateEvent13,
+  getDeliberationReason as getEvent13Reason,
+} from "./covenant-event-13.js";
+import {
   buildClauseForm as buildEvent12Form,
   simulateEvent12,
   getDeliberationReasons as getEvent12Reasons,
@@ -77,6 +82,7 @@ import { mountCoParentWeave } from "./co-parent-weave.js";
 import { mountArenaLife } from "./arena-life.js";
 import { mountApologyRite } from "./apology-rite.js";
 import { mountAnonymousGate } from "./anonymous-gate.js";
+import { mountAgingSeason } from "./aging-season.js";
 
 const scenes = {};
 
@@ -105,6 +111,7 @@ export function createGame() {
     renderEvent09Covenant,
     renderEvent10Covenant,
     renderEvent11Covenant,
+    renderEvent13Covenant,
     renderEvent12Covenant,
     renderAtelierImprov,
     renderForgeTryon,
@@ -112,6 +119,7 @@ export function createGame() {
     renderArenaLife,
     renderApologyRite,
     renderAnonymousGate,
+    renderAgingSeason,
     renderDeliberation,
     renderEndingPicker,
     renderEpilogue: () => renderEpilogue(game),
@@ -667,6 +675,61 @@ export function createGame() {
     });
   }
 
+  function renderEvent13Covenant() {
+    const selected = new Set(["optInAging", "noYouthNorm", "sharedMedicalCost"]);
+
+    renderSystem({
+      title: "コヴナント事件 #13 — 老化を選ぶ村",
+      desc: "一回性 × 安全技術 × 世代間の公平。有限の身体を、強制しない。",
+      systemId: "covenant",
+      contentHtml: `<div id="event13-form">${buildEvent13Form(selected)}</div>`,
+      actions: [
+        {
+          label: "ガーデンで試行を開始する（7年後に再訪）",
+          action: () => {
+            document.querySelectorAll("#event13-form input").forEach((input) => {
+              if (input.checked) state.flags[`ev13_${input.dataset.key}`] = true;
+            });
+            state.flags.ev13_done = true;
+            state.event13Sim = simulateEvent13(state);
+            if (state.flags.ev13_optInAging) bumpTrust(state, "children", 2);
+            if (state.flags.ev13_sharedMedicalCost) bumpTrust(state, "sen", 1);
+            go("event13_revisit");
+          },
+        },
+      ],
+    });
+
+    document.getElementById("system-content").addEventListener("change", (e) => {
+      if (e.target.type === "checkbox") {
+        const key = e.target.dataset.key;
+        if (e.target.checked) selected.add(key);
+        else selected.delete(key);
+      }
+    });
+  }
+
+  function renderAgingSeason() {
+    renderSystem({
+      title: "SYS-07 — 老化の季節",
+      desc: "有限の配分。20年を有限・安全技術・世代公平に配分——正解はない。",
+      systemId: "agingSeason",
+      contentHtml: `<div id="aging-season-root"></div>`,
+      actions: [],
+    });
+
+    mountAgingSeason(document.getElementById("aging-season-root"), {
+      onComplete: (result) => {
+        state.agingSeasonResult = result;
+        state.flags.aging_season_done = true;
+        if (result.profile === "finiteLead") bumpTrust(state, "children", 1);
+        if (result.profile === "fairLead") bumpTrust(state, "sen", 1);
+        go("event13_season_result");
+      },
+      onSkip: () => renderEvent13Covenant(),
+    });
+  }
+
   function renderEvent12Covenant() {
     const selected = new Set(["noCommand", "periodicVote", "minorityWitness"]);
 
@@ -879,6 +942,10 @@ export function createGame() {
       reasons.push(getEvent11Reason());
     }
 
+    if (state.flags.ev13_done) {
+      reasons.push(getEvent13Reason());
+    }
+
     if (state.flags.ev12_done) {
       reasons.push(...getEvent12Reasons());
     }
@@ -919,6 +986,7 @@ export function createGame() {
           ${state.flags.ev09_done ? `<span class="tag ${picked.has("soliArena") ? "active" : ""}">引退できる競技</span>` : ""}
           ${state.flags.ev10_done ? `<span class="tag ${picked.has("senApology") ? "active" : ""}">記録しない贖罪</span>` : ""}
           ${state.flags.ev11_done ? `<span class="tag ${picked.has("childGarden") ? "active" : ""}">選べる家族</span>` : ""}
+          ${state.flags.ev13_done ? `<span class="tag ${picked.has("childAging") ? "active" : ""}">有限の身体</span>` : ""}
           ${state.flags.ev12_done ? `<span class="tag ${picked.has("kaede") ? "active" : ""}">命令しない神</span>` : ""}
           ${state.flags.atelier_improv_done ? `<span class="tag ${picked.has("soli") ? "active" : ""}">一度きりの即興</span>` : ""}
         </div>

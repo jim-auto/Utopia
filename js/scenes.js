@@ -38,6 +38,10 @@ import {
   getFeaturedQuote as getEvent11Quote,
 } from "./covenant-event-11.js";
 import {
+  renderOutcomeCards as renderEvent13Cards,
+  getFeaturedQuote as getEvent13Quote,
+} from "./covenant-event-13.js";
+import {
   renderOutcomeCards as renderEvent12Cards,
   getFeaturedQuote as getEvent12Quote,
 } from "./covenant-event-12.js";
@@ -58,6 +62,7 @@ export function getSceneHandlers(game) {
     renderEvent09Covenant,
     renderEvent10Covenant,
     renderEvent11Covenant,
+    renderEvent13Covenant,
     renderEvent12Covenant,
     renderAtelierImprov,
     renderForgeTryon,
@@ -65,6 +70,7 @@ export function getSceneHandlers(game) {
     renderArenaLife,
     renderApologyRite,
     renderAnonymousGate,
+    renderAgingSeason,
     renderDeliberation,
     renderEndingPicker,
     renderEpilogue,
@@ -1016,6 +1022,11 @@ export function getSceneHandlers(game) {
             action: () => go("event11_intro"),
           },
           {
+            label: "コモン・ガーデン — 老化を選ぶ村（事件 #13）",
+            hint: "一回性 × 安全技術 × 世代間の公平",
+            action: () => go("event13_intro"),
+          },
+          {
             label: "両方見送る — 出発憲章の議会へ",
             hint: "《命令しない神》エンディングは条件付きでロック",
             action: () => {
@@ -1087,6 +1098,77 @@ export function getSceneHandlers(game) {
           <p>共同契約、子どもの退出、血縁非優先——条項は実行されたが、「限定家族」という新しい特権も生まれた。</p>
           ${quote ? say(quote.npc, quote.quote) : ""}
           <p>ホライズンへ戻り、モザイクまたは議会へ進める。</p>
+        `,
+        period: 4,
+        location: "コモン・ガーデン",
+        mood: sim.tension === "high" ? "vow" : "garden",
+        art: "garden",
+        speaker: quote?.npc,
+        choices: [{ label: "ホライズンへ — 第四章に戻る", action: () => go("chapter4") }],
+      });
+    },
+
+    event13_intro: () =>
+      go({
+        chapter: "第四章",
+        title: "老化を選ぶ村",
+        body: `
+          <p>地球・コモン・ガーデン。医療は無限に近いが、<strong>老化</strong>だけは消せない——ある共同体は、それを選ぶ。</p>
+          ${state.refusal === "immortality" ? "<p>あなたは<strong>永遠の生命</strong>を拒んだ。子ども代表は言う。「終わりを選べるから、始められる——老化も、そうだ」</p>" : ""}
+          ${state.refusal === "art" ? "<p>あなたは<strong>完成</strong>を拒んだ。ハルは、身体の終わりも「完成の一形」かもしれないと言う。</p>" : ""}
+          ${say("child", "永遠を前提にしないで。有限の身体を、強制も美化もしないで。")}
+          ${say("aster", "驚異を強要するな。老化を選ぶ者と、選ばない者——どちらも正当だ。")}
+          ${say("haru", "庭と同じだ。去るように、終わりを選ぶ自由も。")}
+          <p>3D空間で<strong>祭りの広場</strong>へ近づき、<strong>E</strong>で調べてから、季節配分または条項へ。</p>
+        `,
+        period: 4,
+        location: "コモン・ガーデン",
+        mood: "garden",
+        art: "garden",
+        speaker: "child",
+        choices: [
+          {
+            label: "20年を配分する — 有限・安全・公平（SYS-07）",
+            action: () => renderAgingSeason(),
+          },
+          {
+            label: "配分せず — 条項だけ組む",
+            action: () => renderEvent13Covenant(),
+          },
+        ],
+      }),
+
+    event13_season_result: () => {
+      const r = state.agingSeasonResult;
+      go({
+        chapter: "第四章",
+        title: "老化の季節 — 配分のあと",
+        body: `
+          <p>季節ID <code>${r?.signature || "—"}</code></p>
+          <p class="sim-lead">${r?.lead || ""}</p>
+          ${say("child", "終わりを選べるから、始められる——それを、条文に書こう。")}
+          <p>老化共同体の条項を、これから組む。</p>
+        `,
+        location: "コモン・ガーデン",
+        mood: "garden",
+        art: "garden",
+        speaker: "child",
+        choices: [{ label: "コヴナント・グラマー — 老化共同体の条項を組む", action: () => renderEvent13Covenant() }],
+      });
+    },
+
+    event13_revisit: () => {
+      const sim = state.event13Sim || { summary: "", outcomes: [], tension: "medium" };
+      const quote = getEvent13Quote(sim);
+      go({
+        chapter: "第四章",
+        title: "老化を選ぶ村 — 七年後",
+        body: `
+          <p class="sim-lead">${sim.summary}</p>
+          ${renderEvent13Cards(sim.outcomes)}
+          <p>任意の老化、世代公平、匿名の終わり——条項は実行されたが、「二度目の老化選択」という新語も invent された。</p>
+          ${quote ? say(quote.npc, quote.quote) : ""}
+          <p>有限の身体の試行は、出発憲章にも影響を与えるだろう。</p>
         `,
         period: 4,
         location: "コモン・ガーデン",

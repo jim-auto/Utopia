@@ -122,6 +122,7 @@ export function renderSidebar(state) {
     if (state.flags.ev09_done) events.push("競技の一生");
     if (state.flags.ev10_done) events.push("記録しない謝罪");
     if (state.flags.ev11_done) events.push("共同親");
+    if (state.flags.ev13_done) events.push("老化を選ぶ村");
     if (state.flags.ev12_done) events.push("モザイク承認投票");
     if (state.flags.atelier_improv_done) events.push("アトリエ即興");
     if (state.flags.cov_childChoice || state.flags.cov_exitImmediate) events.push("出発憲章試行");
