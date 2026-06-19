@@ -70,6 +70,7 @@ export function renderSidebar(state) {
   if (eventsEl) {
     const events = [];
     if (state.flags.ev04_done) events.push("忘れられる権利");
+    if (state.flags.ev05_done) events.push("百年庭園");
     if (state.flags.ev12_done) events.push("モザイク承認投票");
     if (state.flags.cov_childChoice || state.flags.cov_exitImmediate) events.push("出発憲章試行");
     eventsEl.innerHTML =

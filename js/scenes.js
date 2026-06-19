@@ -6,6 +6,10 @@ import {
   getFeaturedQuote as getEvent04Quote,
 } from "./covenant-event-04.js";
 import {
+  renderOutcomeCards as renderEvent05Cards,
+  getFeaturedQuote as getEvent05Quote,
+} from "./covenant-event-05.js";
+import {
   renderOutcomeCards as renderEvent12Cards,
   getFeaturedQuote as getEvent12Quote,
 } from "./covenant-event-12.js";
@@ -18,6 +22,7 @@ export function getSceneHandlers(game) {
     renderPresence,
     renderCovenant,
     renderEvent04Covenant,
+    renderEvent05Covenant,
     renderEvent12Covenant,
     renderDeliberation,
     renderEndingPicker,
@@ -179,7 +184,7 @@ export function getSceneHandlers(game) {
                 game.bumpTrust("soli", -1);
                 game.bumpTrust("children", 1);
                 state.flags.refusedConcertVow = true;
-                go("chapter3");
+                go("chapter2_bridge");
               },
             },
           ],
@@ -200,12 +205,12 @@ export function getSceneHandlers(game) {
               label: "誓約する — 試験期間中、匿名性を守る",
               action: () => {
                 game.addVow({ label: "匿名共同体の秘密を試験期間中守る", with: "無名の集団" });
-                go("chapter3");
+                go("chapter2_bridge");
               },
             },
             {
               label: "誓約しない",
-              action: () => go("chapter3"),
+              action: () => go("chapter2_bridge"),
             },
           ],
         });
@@ -231,10 +236,78 @@ export function getSceneHandlers(game) {
         choices: [
           {
             label: "第三章へ — 未来人の問い",
+            action: () => go("chapter2_bridge"),
+          },
+        ],
+      }),
+
+    chapter2_bridge: () =>
+      go({
+        chapter: "第二章",
+        title: "百年庭園",
+        body: `
+          <p>地球・コモン・ガーデン。百年かけて一つの庭を完成させる共同体がある——と、人々は言う。</p>
+          ${say("haru", "完成は目標であって、期限ではない。去る人も、残る人も、どちらも正しい。")}
+          <p>第三章の前に、ここで試行を見届けるかどうかを選べる。</p>
+        `,
+        location: "コモン・ガーデン",
+        mood: "garden",
+        art: "garden",
+        speaker: "haru",
+        choices: [
+          {
+            label: "百年庭園の試験を見届ける（事件 #05）",
+            hint: "完成の遅延・放棄の自由・世代交代",
+            action: () => go("event05_intro"),
+          },
+          {
+            label: "第三章へ進む — 未来人の問い",
             action: () => go("chapter3"),
           },
         ],
       }),
+
+    event05_intro: () =>
+      go({
+        chapter: "第二章",
+        title: "百年庭園 — 設計",
+        body: `
+          <p>ハルは設計図を広げる。回廊は42%しか繋がっていない。</p>
+          ${state.refusal === "art" ? "<p>あなたはかつて<strong>芸術家としての成功</strong>——完成——を拒んだ。ハルはそれを知っている。</p>" : ""}
+          ${say("haru", "この庭は、百年後に完成するかもしれない。完成しないかもしれない。どちらも失敗ではない。")}
+          <p>条項を選び、十年の試行を始めよう。</p>
+        `,
+        location: "コモン・ガーデン",
+        mood: "garden",
+        art: "garden",
+        speaker: "haru",
+        choices: [
+          {
+            label: "コヴナント・グラマー — 庭園の条項を組む",
+            action: () => renderEvent05Covenant(),
+          },
+        ],
+      }),
+
+    event05_revisit: () => {
+      const sim = state.event05Sim || { summary: "", outcomes: [], tension: "medium" };
+      const quote = getEvent05Quote(sim);
+      go({
+        chapter: "第二章",
+        title: "百年庭園 — 十年後",
+        body: `
+          <p class="sim-lead">${sim.summary}</p>
+          ${renderEvent05Cards(sim.outcomes)}
+          <p>庭は未完成のまま、来園者を増やした。世代は交代し、創設者の半分は不満を残した——それでも、暴力はなかった。</p>
+          ${quote ? say(quote.npc, quote.quote) : ""}
+        `,
+        location: "コモン・ガーデン",
+        mood: sim.tension === "high" ? "vow" : "garden",
+        art: "garden",
+        speaker: quote?.npc,
+        choices: [{ label: "第三章へ — 未来人の問い", action: () => go("chapter3") }],
+      });
+    },
 
     chapter3: () =>
       go({
@@ -444,6 +517,7 @@ export function renderEpilogue(game) {
   if (state.deliberationOutcome === "dissent") processNote += "異議を記録したまま決定した。";
   if (state.flags.refusedConcertVow) processNote += "一回性の誓約を拒んだ。";
   if (state.flags.ev04_done) processNote += "忘れと記録の境界を試した。";
+  if (state.flags.ev05_done) processNote += "終わらない庭の試行を見届けた。";
   if (state.flags.ev12_done) processNote += "命令しない神の条件を設計した。";
   if (state.flags.ev12_skipped) processNote += "モザイク試行を見送った。";
   if (state.ending === "mosaic" && state.event12Sim?.safeguards) {

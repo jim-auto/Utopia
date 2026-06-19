@@ -25,13 +25,16 @@ import {
   getDeliberationExtraReason as getEvent04Reason,
 } from "./covenant-event-04.js";
 import {
+  buildClauseForm as buildEvent05Form,
+  simulateEvent05,
+  getDeliberationReason as getEvent05Reason,
+} from "./covenant-event-05.js";
+import {
   buildClauseForm as buildEvent12Form,
   simulateEvent12,
   getDeliberationReasons as getEvent12Reasons,
   canUnlockMosaicEnding,
 } from "./covenant-event-12.js";
-
-const scenes = {};
 
 function register(name, fn) {
   scenes[name] = fn;
@@ -50,6 +53,7 @@ export function createGame() {
     renderPresence,
     renderCovenant,
     renderEvent04Covenant,
+    renderEvent05Covenant,
     renderEvent12Covenant,
     renderDeliberation,
     renderEndingPicker,
@@ -224,6 +228,38 @@ export function createGame() {
     });
   }
 
+  function renderEvent05Covenant() {
+    const selected = new Set(["noDeadline", "abandonFree", "noInheritance"]);
+
+    renderSystem({
+      title: "コヴナント事件 #05 — 百年庭園",
+      desc: "完成の遅延 × 世代交代 × 放棄の自由。終わらない庭を、失敗にしない。",
+      systemId: "covenant",
+      contentHtml: `<div id="event05-form">${buildEvent05Form(selected)}</div>`,
+      actions: [
+        {
+          label: "庭園で試行を開始する（10年後に再訪）",
+          action: () => {
+            document.querySelectorAll("#event05-form input").forEach((input) => {
+              if (input.checked) state.flags[`ev05_${input.dataset.key}`] = true;
+            });
+            state.flags.ev05_done = true;
+            state.event05Sim = simulateEvent05(state);
+            go("event05_revisit");
+          },
+        },
+      ],
+    });
+
+    document.getElementById("system-content").addEventListener("change", (e) => {
+      if (e.target.type === "checkbox") {
+        const key = e.target.dataset.key;
+        if (e.target.checked) selected.add(key);
+        else selected.delete(key);
+      }
+    });
+  }
+
   function renderEvent12Covenant() {
     const selected = new Set(["noCommand", "periodicVote", "minorityWitness"]);
 
@@ -375,6 +411,10 @@ export function createGame() {
       reasons.push({ ...extra, id: "lin" });
     }
 
+    if (state.flags.ev05_done) {
+      reasons.push(getEvent05Reason());
+    }
+
     if (state.flags.ev12_done) {
       reasons.push(...getEvent12Reasons());
     }
@@ -403,6 +443,7 @@ export function createGame() {
           <span class="tag ${picked.has("child") ? "active" : ""}">未来人の再選択</span>
           <span class="tag ${picked.has("sen") ? "active" : ""}">異議の記録</span>
           ${state.flags.ev04_done ? `<span class="tag ${picked.has("lin") ? "active" : ""}">記憶の隙間</span>` : ""}
+          ${state.flags.ev05_done ? `<span class="tag ${picked.has("haru") ? "active" : ""}">終わらない庭</span>` : ""}
           ${state.flags.ev12_done ? `<span class="tag ${picked.has("kaede") ? "active" : ""}">命令しない神</span>` : ""}
         </div>
       `;

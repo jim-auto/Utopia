@@ -29,6 +29,11 @@ const NPCS = {
     role: "モザイク設計者 / 全域",
     color: "#c4a0e8",
   },
+  haru: {
+    name: "ハル",
+    role: "庭師 / コモン・ガーデン",
+    color: "#7ecf9a",
+  },
 };
 
 function portraitSvg(id) {
@@ -82,6 +87,13 @@ function portraitSvg(id) {
       <line x1="35" y1="40" x2="50" y2="50" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
       <line x1="65" y1="40" x2="50" y2="50" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
       <line x1="50" y1="65" x2="50" y2="50" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
+    `,
+    haru: `
+      <path d="M30 85 Q50 45 70 85" fill="none" stroke="${npc.color}" stroke-width="1.5"/>
+      <path d="M42 85 L42 55 Q50 48 58 55 L58 85" fill="none" stroke="${npc.color}" stroke-width="1.2"/>
+      <circle cx="50" cy="38" r="10" fill="none" stroke="${npc.color}" stroke-width="1.2"/>
+      <path d="M25 70 Q35 60 45 70" fill="none" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
+      <path d="M55 70 Q65 60 75 70" fill="none" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
     `,
   };
 
