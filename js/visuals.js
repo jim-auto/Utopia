@@ -69,6 +69,7 @@ const SYSTEM_META = {
   forgeBody: { badge: "身体的実践", mood: "forge", art: "forge" },
   coParent: { badge: "関係の実践", mood: "garden", art: "garden" },
   arenaLife: { badge: "身体的実践", mood: "mars", art: "atelier" },
+  apologyRite: { badge: "見届けの設計", mood: "memory", art: "palimpsest" },
   vows: { badge: "誓約", mood: "vow", art: "atelier" },
   covenant: { badge: "コヴナント", mood: "law", art: "covenant" },
   reasons: { badge: "理由の地図", mood: "council", art: "deliberation" },

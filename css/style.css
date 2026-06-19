@@ -1840,6 +1840,100 @@ body.mode-3d .title-screen .scene-hero {
   font-size: 0.82rem;
 }
 
+/* SYS-07 — 記録しない謝罪 */
+.apology-rite {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.apology-lead {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.apology-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--bg-panel-border);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.apology-seg-repair { background: var(--mood-accent); opacity: 0.85; }
+.apology-seg-seal { background: #8888c8; opacity: 0.75; }
+.apology-seg-reserve { background: #c8a878; opacity: 0.75; }
+
+.apology-axes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.apology-axis {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--bg-panel-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.apology-axis-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.apology-axis-label {
+  color: var(--mood-accent);
+  font-family: var(--font-serif);
+}
+
+.apology-axis-val {
+  font-family: ui-monospace, monospace;
+  color: var(--accent-gold);
+}
+
+.apology-axis-desc {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.apology-stepper {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.apology-btn {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--bg-panel-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.apology-btn:hover {
+  border-color: var(--mood-accent);
+  color: var(--mood-accent);
+}
+
+.apology-remaining {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.apology-remaining-warn b { color: #e8a060; }
+.apology-remaining-ok b { color: var(--mood-accent); }
+
+.apology-skip-btn {
+  align-self: flex-start;
+  font-size: 0.82rem;
+}
+
 .tag-row {
   display: flex;
   flex-wrap: wrap;

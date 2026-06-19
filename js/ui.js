@@ -119,6 +119,7 @@ export function renderSidebar(state) {
     if (state.flags.ev07_done) events.push("深層の命名");
     if (state.flags.ev08_done) events.push("新身体の試着");
     if (state.flags.ev09_done) events.push("競技の一生");
+    if (state.flags.ev10_done) events.push("記録しない謝罪");
     if (state.flags.ev11_done) events.push("共同親");
     if (state.flags.ev12_done) events.push("モザイク承認投票");
     if (state.flags.atelier_improv_done) events.push("アトリエ即興");

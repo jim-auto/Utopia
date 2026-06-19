@@ -51,6 +51,11 @@ import {
   getDeliberationReason as getEvent09Reason,
 } from "./covenant-event-09.js";
 import {
+  buildClauseForm as buildEvent10Form,
+  simulateEvent10,
+  getDeliberationReason as getEvent10Reason,
+} from "./covenant-event-10.js";
+import {
   buildClauseForm as buildEvent11Form,
   simulateEvent11,
   getDeliberationReason as getEvent11Reason,
@@ -65,6 +70,7 @@ import { mountAtelierImprov, getImprovDeliberationReason } from "./atelier-impro
 import { mountForgeTryon } from "./forge-tryon.js";
 import { mountCoParentWeave } from "./co-parent-weave.js";
 import { mountArenaLife } from "./arena-life.js";
+import { mountApologyRite } from "./apology-rite.js";
 
 const scenes = {};
 
@@ -90,12 +96,14 @@ export function createGame() {
     renderEvent07Covenant,
     renderEvent08Covenant,
     renderEvent09Covenant,
+    renderEvent10Covenant,
     renderEvent11Covenant,
     renderEvent12Covenant,
     renderAtelierImprov,
     renderForgeTryon,
     renderCoParentWeave,
     renderArenaLife,
+    renderApologyRite,
     renderDeliberation,
     renderEndingPicker,
     renderEpilogue: () => renderEpilogue(game),
@@ -486,6 +494,61 @@ export function createGame() {
     });
   }
 
+  function renderEvent10Covenant() {
+    const selected = new Set(["noArchiveApology", "victimClosure", "witnessSeal"]);
+
+    renderSystem({
+      title: "コヴナント事件 #10 — 記録しない謝罪",
+      desc: "贖罪 × 忘却 × 被害者の記憶。謝罪を記録の商品にしない。",
+      systemId: "covenant",
+      contentHtml: `<div id="event10-form">${buildEvent10Form(selected)}</div>`,
+      actions: [
+        {
+          label: "パリンプセストで試行を開始する（5年後に再訪）",
+          action: () => {
+            document.querySelectorAll("#event10-form input").forEach((input) => {
+              if (input.checked) state.flags[`ev10_${input.dataset.key}`] = true;
+            });
+            state.flags.ev10_done = true;
+            state.event10Sim = simulateEvent10(state);
+            if (state.flags.ev10_victimClosure) bumpTrust(state, "lin", 2);
+            if (state.flags.ev10_noArchiveApology) bumpTrust(state, "sen", 1);
+            go("event10_revisit");
+          },
+        },
+      ],
+    });
+
+    document.getElementById("system-content").addEventListener("change", (e) => {
+      if (e.target.type === "checkbox") {
+        const key = e.target.dataset.key;
+        if (e.target.checked) selected.add(key);
+        else selected.delete(key);
+      }
+    });
+  }
+
+  function renderApologyRite() {
+    renderSystem({
+      title: "SYS-07 — 記録しない謝罪",
+      desc: "見届けの設計。12ヶ月を贖罪・封印・被害者留保に配分——正解はない。",
+      systemId: "apologyRite",
+      contentHtml: `<div id="apology-rite-root"></div>`,
+      actions: [],
+    });
+
+    mountApologyRite(document.getElementById("apology-rite-root"), {
+      onComplete: (result) => {
+        state.apologyRiteResult = result;
+        state.flags.apology_rite_done = true;
+        if (result.profile === "victimLead") bumpTrust(state, "lin", 1);
+        if (result.profile === "repairLead") bumpTrust(state, "sen", 1);
+        go("event10_rite_result");
+      },
+      onSkip: () => renderEvent10Covenant(),
+    });
+  }
+
   function renderEvent11Covenant() {
     const selected = new Set(["multiParent", "childExitFamily", "renewContract"]);
 
@@ -741,6 +804,10 @@ export function createGame() {
       reasons.push(getEvent09Reason());
     }
 
+    if (state.flags.ev10_done) {
+      reasons.push(getEvent10Reason());
+    }
+
     if (state.flags.ev11_done) {
       reasons.push(getEvent11Reason());
     }
@@ -782,6 +849,7 @@ export function createGame() {
           ${state.flags.ev07_done ? `<span class="tag ${picked.has("nagi") ? "active" : ""}">未命名の驚異</span>` : ""}
           ${state.flags.ev08_done ? `<span class="tag ${picked.has("child") ? "active" : ""}">試着と同意</span>` : ""}
           ${state.flags.ev09_done ? `<span class="tag ${picked.has("soliArena") ? "active" : ""}">引退できる競技</span>` : ""}
+          ${state.flags.ev10_done ? `<span class="tag ${picked.has("senApology") ? "active" : ""}">記録しない贖罪</span>` : ""}
           ${state.flags.ev11_done ? `<span class="tag ${picked.has("childGarden") ? "active" : ""}">選べる家族</span>` : ""}
           ${state.flags.ev12_done ? `<span class="tag ${picked.has("kaede") ? "active" : ""}">命令しない神</span>` : ""}
           ${state.flags.atelier_improv_done ? `<span class="tag ${picked.has("soli") ? "active" : ""}">一度きりの即興</span>` : ""}

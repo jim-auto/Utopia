@@ -26,6 +26,10 @@ import {
   getFeaturedQuote as getEvent09Quote,
 } from "./covenant-event-09.js";
 import {
+  renderOutcomeCards as renderEvent10Cards,
+  getFeaturedQuote as getEvent10Quote,
+} from "./covenant-event-10.js";
+import {
   renderOutcomeCards as renderEvent11Cards,
   getFeaturedQuote as getEvent11Quote,
 } from "./covenant-event-11.js";
@@ -47,12 +51,14 @@ export function getSceneHandlers(game) {
     renderEvent07Covenant,
     renderEvent08Covenant,
     renderEvent09Covenant,
+    renderEvent10Covenant,
     renderEvent11Covenant,
     renderEvent12Covenant,
     renderAtelierImprov,
     renderForgeTryon,
     renderCoParentWeave,
     renderArenaLife,
+    renderApologyRite,
     renderDeliberation,
     renderEndingPicker,
     renderEpilogue,
@@ -487,6 +493,11 @@ export function getSceneHandlers(game) {
             action: () => go("event04_intro"),
           },
           {
+            label: "パリンプセスト — 記録しない謝罪（事件 #10）",
+            hint: "贖罪 × 忘却 × 被害者の記憶",
+            action: () => go("event10_intro"),
+          },
+          {
             label: "アビス — 深層の命名（事件 #07）",
             hint: "驚異の保護 × 知の公開 × 探索のリスク",
             action: () => go("event07_intro"),
@@ -720,6 +731,84 @@ export function getSceneHandlers(game) {
       });
     },
 
+    event10_intro: () =>
+      go({
+        chapter: "第三章",
+        title: "記録しない謝罪",
+        body: `
+          <p>月・パリンプセスト。忘れの特区の隣で、今度は<strong>謝罪</strong>が問われている——記録に残すか、身体で向き合うか、被害者が終わらせるか。</p>
+          ${state.flags.ev04_done ? "<p>忘れられる権利の試行のあと、共同体は次の層に来た。<em>贖罪を記録の商品にしない</em>——それは忘却とも、関係とも衝突する。</p>" : ""}
+          ${state.refusal === "memory" ? "<p>あなたはかつて<strong>記憶の編集</strong>を拒んだ。記録しない贖罪は、その拒否の続きでもある。</p>" : ""}
+          ${say("sen", "謝罪を公共档に残すと、それはもう贖罪ではなく、自己演出になる。ただし、被害者の記憶まで奪うな。")}
+          ${say("lin", "終わりも、被害者の選択だ。見届け人は存在だけを記録し、内容は封印する——それが新しい透明性かもしれない。")}
+          <p>3D空間で<strong>記録の環</strong>へ近づき、<strong>E</strong>で調べてから、儀式設計または条項へ。</p>
+        `,
+        period: 3,
+        location: "パリンプセスト",
+        mood: "memory",
+        art: "palimpsest",
+        speaker: "sen",
+        choices: [
+          {
+            label: "12ヶ月の儀式を設計する — 贖罪・封印・留保（SYS-07）",
+            action: () => renderApologyRite(),
+          },
+          {
+            label: "儀式を設計せず — 条項だけ組む",
+            action: () => renderEvent10Covenant(),
+          },
+        ],
+      }),
+
+    event10_rite_result: () => {
+      const r = state.apologyRiteResult;
+      go({
+        chapter: "第三章",
+        title: "謝罪の儀式 — 設計のあと",
+        body: `
+          <p>儀式ID <code>${r?.signature || "—"}</code></p>
+          <p class="sim-lead">${r?.lead || ""}</p>
+          ${say("lin", "終わりも、被害者の選択だ。早く終わらせたいのは、加害側の不安かもしれない。")}
+          <p>パリンプセストの条項を、これから組む。</p>
+        `,
+        location: "パリンプセスト",
+        mood: "memory",
+        art: "palimpsest",
+        speaker: "lin",
+        choices: [{ label: "コヴナント・グラマー — 非記録謝罪の条項を組む", action: () => renderEvent10Covenant() }],
+      });
+    },
+
+    event10_revisit: () => {
+      const sim = state.event10Sim || { summary: "", outcomes: [], tension: "medium" };
+      const quote = getEvent10Quote(sim);
+      go({
+        chapter: "第三章",
+        title: "記録しない謝罪 — 五年後",
+        body: `
+          <p class="sim-lead">${sim.summary}</p>
+          ${renderEvent10Cards(sim.outcomes)}
+          <p>非記録儀式、被害者の終了権、見届け人の封印——条項は実行されたが、「匿名の加害者」という記号も invent された。</p>
+          ${quote ? say(quote.npc, quote.quote) : ""}
+          <p>パリンプセストでの経験は、出発憲章にも影響を与えるだろう。</p>
+        `,
+        period: 3,
+        location: "パリンプセスト",
+        mood: sim.tension === "high" ? "vow" : "memory",
+        art: "palimpsest",
+        speaker: quote?.npc,
+        choices: [
+          {
+            label: "ホライズンへ — 出発憲章の試行を始める",
+            action: () => {
+              state.location = "ホライズン";
+              renderCovenant();
+            },
+          },
+        ],
+      });
+    },
+
     event07_intro: () =>
       go({
         chapter: "第三章",
@@ -934,7 +1023,7 @@ export function getSceneHandlers(game) {
         chapter: "第四章",
         title: "理由の地図",
         body: `
-          <p>あなたが提案した制度は、五年の試行を経た。${state.flags.ev12_done ? "モザイクの一年評価も、議題に加わる。" : ""}${state.flags.ev11_done ? " 共同親の試行も、議題に加わる。" : ""}${state.flags.ev09_done ? " 競技共同体の試行も、議題に加わる。" : ""}支持者と反対者が、公共議会に集う。</p>
+          <p>あなたが提案した制度は、五年の試行を経た。${state.flags.ev12_done ? "モザイクの一年評価も、議題に加わる。" : ""}${state.flags.ev11_done ? " 共同親の試行も、議題に加わる。" : ""}${state.flags.ev10_done ? " 非記録謝罪の試行も、議題に加わる。" : ""}${state.flags.ev09_done ? " 競技共同体の試行も、議題に加わる。" : ""}支持者と反対者が、公共議会に集う。</p>
           <p>ここでの勝利条件は全会一致ではない。<strong>安定した異議</strong>——反対者が賛成しなくても、負担が理解され、退出権が残り、意見が記録されれば、決定は正当になる。</p>
         `,
         period: 4,
