@@ -45,3 +45,4 @@
 ## 5. 参照
 
 - [用語集](../glossary.md)
+- [NPC設計](../narrative/00-index.md)

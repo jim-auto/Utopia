@@ -40,7 +40,8 @@ npx serve .
 
 | ドキュメント | 内容 |
 |-------------|------|
-| [GDD 目次](docs/gdd/00-index.md) | ゲームデザインドキュメント全体 |
+| [GDD 目次](docs/gdd/00-index.md) | ゲームデザインドocument全体 |
+| [NPC設計](docs/narrative/00-index.md) | 主要キャスト・関係図・拒否フック |
 | [用語集](docs/glossary.md) | 固有名詞・システム用語 |
 | [システム仕様](docs/systems/00-overview.md) | ゲームシステムの技術向け仕様 |
 
