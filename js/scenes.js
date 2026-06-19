@@ -5,9 +5,24 @@ import {
   renderOutcomeCards as renderEvent04Cards,
   getFeaturedQuote as getEvent04Quote,
 } from "./covenant-event-04.js";
+import {
+  renderOutcomeCards as renderEvent12Cards,
+  getFeaturedQuote as getEvent12Quote,
+} from "./covenant-event-12.js";
 
 export function getSceneHandlers(game) {
-  const { state, go, renderRefusalPicker, renderPresence, renderCovenant, renderEvent04Covenant, renderDeliberation, renderEndingPicker, renderEpilogue } = game;
+  const {
+    state,
+    go,
+    renderRefusalPicker,
+    renderPresence,
+    renderCovenant,
+    renderEvent04Covenant,
+    renderEvent12Covenant,
+    renderDeliberation,
+    renderEndingPicker,
+    renderEpilogue,
+  } = game;
 
   return {
     title: () =>
@@ -321,16 +336,71 @@ export function getSceneHandlers(game) {
         mood: sim.tension === "high" ? "vow" : "law",
         art: "covenant",
         speaker: quote?.npc,
-        choices: [{ label: "第四章 — 理由の地図", action: () => go("chapter4") }],
+        choices: [{ label: "第四章 — 命令しない神", action: () => go("chapter4") }],
       });
     },
 
     chapter4: () =>
       go({
         chapter: "第四章",
+        title: "命令しない神",
+        body: `
+          <p>一部の市民が《モザイク》——全人類の経験を読み、「次に目指すべき目的」を<strong>提案するだけ</strong>の知性——の建造を提案した。</p>
+          ${say("kaede", "これは神ではない。文明が自分自身へ送る手紙だ。")}
+          ${say("sen", "命令しなくても、誰もがその答えを信じるなら、それは神と何が違うのか。")}
+          <p>問題は暴走ではない。自由な人間が、自発的に判断を委ねることだ。</p>
+          <p>出発憲章の議会の前に、モザイクの存続条件を設計するかどうかを選べる。</p>
+        `,
+        period: 4,
+        location: "ホライズン",
+        mood: "council",
+        art: "mosaic",
+        speaker: "kaede",
+        choices: [
+          {
+            label: "モザイクの存続条件を設計する（事件 #12）",
+            hint: "命令権なし・承認投票・少数派証言",
+            action: () => renderEvent12Covenant(),
+          },
+          {
+            label: "モザイク試行を見送る — 出発憲章の議会へ",
+            hint: "《命令しない神》エンディングは条件付きでロック",
+            action: () => {
+              state.flags.ev12_skipped = true;
+              go("chapter4b");
+            },
+          },
+        ],
+      }),
+
+    event12_revisit: () => {
+      const sim = state.event12Sim || { summary: "", outcomes: [], tension: "medium" };
+      const quote = getEvent12Quote(sim);
+      go({
+        chapter: "第四章",
+        title: "モザイク — 一年後",
+        body: `
+          <p class="sim-lead">${sim.summary}</p>
+          ${renderEvent12Cards(sim.outcomes)}
+          <p>モザイクは暴走していない。それでも、人々は<strong>自発的に</strong>その言葉を引用し始めた。</p>
+          ${quote ? say(quote.npc, quote.quote) : ""}
+          ${sim.safeguards ? "<p>あなたが選んだ安全装置は、機能している——少なくとも、今のところは。</p>" : "<p>安全装置が弱い。反対者の声が、祝祭の中でかき消されつつある。</p>"}
+        `,
+        period: 4,
+        location: "ホライズン",
+        mood: sim.tension === "high" ? "vow" : "finale",
+        art: "mosaic",
+        speaker: quote?.npc,
+        choices: [{ label: "出発憲章の議会へ", action: () => go("chapter4b") }],
+      });
+    },
+
+    chapter4b: () =>
+      go({
+        chapter: "第四章",
         title: "理由の地図",
         body: `
-          <p>あなたが提案した制度は、五年の試行を経た。支持者と反対者が、公共議会に集う。</p>
+          <p>あなたが提案した制度は、五年の試行を経た。${state.flags.ev12_done ? "モザイクの一年評価も、議題に加わる。" : ""}支持者と反対者が、公共議会に集う。</p>
           <p>ここでの勝利条件は全会一致ではない。<strong>安定した異議</strong>——反対者が賛成しなくても、負担が理解され、退出権が残り、意見が記録されれば、決定は正当になる。</p>
         `,
         period: 4,
@@ -374,6 +444,11 @@ export function renderEpilogue(game) {
   if (state.deliberationOutcome === "dissent") processNote += "異議を記録したまま決定した。";
   if (state.flags.refusedConcertVow) processNote += "一回性の誓約を拒んだ。";
   if (state.flags.ev04_done) processNote += "忘れと記録の境界を試した。";
+  if (state.flags.ev12_done) processNote += "命令しない神の条件を設計した。";
+  if (state.flags.ev12_skipped) processNote += "モザイク試行を見送った。";
+  if (state.ending === "mosaic" && state.event12Sim?.safeguards) {
+    processNote += "安全装置付きでモザイクが未来へ残った。";
+  }
 
   go({
     chapter: "エピローグ",

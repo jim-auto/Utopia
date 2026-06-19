@@ -58,6 +58,7 @@ const SCENE_ART = {
   deliberation: () => artCouncil(),
   ending: () => artEnding(),
   refusal: () => artPaths(),
+  mosaic: () => artMosaic(),
 };
 
 const SYSTEM_META = {
@@ -295,5 +296,17 @@ function artPaths() {
       <path d="M60 170 Q140 80 200 120 T340 70" fill="none" stroke="var(--mood-accent)" stroke-width="1.5" opacity="0.35" stroke-dasharray="6 8"/>
       <path d="M60 170 Q160 140 200 120 T320 150" fill="none" stroke="#f0e6c8" stroke-width="1" opacity="0.25" stroke-dasharray="4 10"/>
       <circle cx="200" cy="120" r="8" fill="var(--mood-accent)" fill-opacity="0.5"/>
+    </svg>`;
+}
+
+function artMosaic() {
+  return `
+    <svg viewBox="0 0 400 220" class="scene-svg" aria-hidden="true">
+      <circle cx="200" cy="110" r="55" fill="none" stroke="var(--mood-accent)" stroke-width="1" opacity="0.25"/>
+      ${[[140,80],[260,80],[200,160],[120,130],[280,130]].map(([x,y]) => `
+        <circle cx="${x}" cy="${y}" r="8" fill="var(--mood-accent)" fill-opacity="0.35"/>
+        <line x1="${x}" y1="${y}" x2="200" y2="110" stroke="var(--mood-accent)" stroke-width="0.8" opacity="0.3"/>
+      `).join("")}
+      <circle cx="200" cy="110" r="12" fill="var(--mood-accent)" fill-opacity="0.5" class="pulse"/>
     </svg>`;
 }

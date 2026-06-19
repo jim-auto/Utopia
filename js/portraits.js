@@ -24,6 +24,11 @@ const NPCS = {
     role: "記録職 / パリンプセスト",
     color: "#8ab4d4",
   },
+  kaede: {
+    name: "カエデ",
+    role: "モザイク設計者 / 全域",
+    color: "#c4a0e8",
+  },
 };
 
 function portraitSvg(id) {
@@ -67,6 +72,16 @@ function portraitSvg(id) {
       <line x1="42" y1="46" x2="55" y2="46" stroke="${npc.color}" stroke-width="1" opacity="0.35"/>
       <circle cx="50" cy="24" r="9" fill="none" stroke="${npc.color}" stroke-width="1.2"/>
       <path d="M30 75 L50 58 L70 75" fill="none" stroke="${npc.color}" stroke-width="1" opacity="0.4"/>
+    `,
+    kaede: `
+      <circle cx="50" cy="50" r="28" fill="none" stroke="${npc.color}" stroke-width="1" opacity="0.35"/>
+      <circle cx="35" cy="40" r="5" fill="${npc.color}" opacity="0.4"/>
+      <circle cx="65" cy="40" r="5" fill="${npc.color}" opacity="0.4"/>
+      <circle cx="50" cy="65" r="5" fill="${npc.color}" opacity="0.4"/>
+      <circle cx="50" cy="50" r="4" fill="${npc.color}" opacity="0.8"/>
+      <line x1="35" y1="40" x2="50" y2="50" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
+      <line x1="65" y1="40" x2="50" y2="50" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
+      <line x1="50" y1="65" x2="50" y2="50" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
     `,
   };
 

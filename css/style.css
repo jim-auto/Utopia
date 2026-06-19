@@ -546,6 +546,17 @@ body { overflow-x: hidden; }
   box-shadow: 0 0 24px rgba(232, 192, 104, 0.15);
 }
 
+.card-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.card-locked:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--bg-panel-border);
+}
+
 .card-title { font-weight: 500; margin-bottom: 0.35rem; }
 .card-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.55; }
 
