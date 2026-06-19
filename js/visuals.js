@@ -74,6 +74,7 @@ const SCENE_ART = {
 
 const SYSTEM_META = {
   presence: { badge: "プレゼンス", mood: "cosmos", art: "gate" },
+  embodied: { badge: "身体的実践", mood: "mars", art: "atelier" },
   vows: { badge: "誓約", mood: "vow", art: "atelier" },
   covenant: { badge: "コヴナント", mood: "law", art: "covenant" },
   reasons: { badge: "理由の地図", mood: "council", art: "deliberation" },

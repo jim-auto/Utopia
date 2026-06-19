@@ -46,6 +46,7 @@ import {
   getDeliberationReasons as getEvent12Reasons,
   canUnlockMosaicEnding,
 } from "./covenant-event-12.js";
+import { mountAtelierImprov, getImprovDeliberationReason } from "./atelier-improv.js";
 
 const scenes = {};
 
@@ -70,6 +71,7 @@ export function createGame() {
     renderEvent06Covenant,
     renderEvent07Covenant,
     renderEvent12Covenant,
+    renderAtelierImprov,
     renderDeliberation,
     renderEndingPicker,
     renderEpilogue: () => renderEpilogue(game),
@@ -194,7 +196,11 @@ export function createGame() {
             bumpTrust(state, conflict.left.trust[0], conflict.left.trust[1]);
             addMissed(state, conflict.left.missed);
             state.presenceLog.push(conflict.left.title);
-            go(conflict.next);
+            if (chapterKey === "chapter2" && conflict.left.flag === "joinedConcert") {
+              go("atelier_improv_intro");
+            } else {
+              go(conflict.next);
+            }
           },
         },
         {
@@ -466,6 +472,35 @@ export function createGame() {
     });
   }
 
+  function renderAtelierImprov() {
+    renderSystem({
+      title: "SYS-07 — 一回性の即興",
+      desc: "アトリエの身体的実践。拍に合わせて奏でる——この演奏は記録されず、再演もされない。",
+      systemId: "embodied",
+      contentHtml: `<div id="improv-root"></div>`,
+      actions: [],
+    });
+
+    const root = document.getElementById("improv-root");
+    mountAtelierImprov(root, {
+      onComplete: (result) => {
+        state.improvResult = result;
+        state.flags.atelier_improv_done = true;
+        if (result.tone === "together") bumpTrust(state, "soli", 2);
+        else if (result.tone === "quiet") bumpTrust(state, "soli", 1);
+        else if (result.tone === "eager") {
+          bumpTrust(state, "soli", -1);
+          bumpTrust(state, "children", 1);
+        } else bumpTrust(state, "soli", 1);
+        go("atelier_improv_result");
+      },
+      onSkip: () => {
+        state.flags.atelier_improv_skipped = true;
+        go("chapter2b");
+      },
+    });
+  }
+
   function renderDeliberation() {
     const reasons = [
       {
@@ -509,6 +544,10 @@ export function createGame() {
       reasons.push(...getEvent12Reasons());
     }
 
+    if (state.flags.atelier_improv_done && state.improvResult) {
+      reasons.push(getImprovDeliberationReason(state.improvResult));
+    }
+
     const picked = new Set();
 
     function refresh() {
@@ -537,6 +576,7 @@ export function createGame() {
           ${state.flags.ev06_done ? `<span class="tag ${picked.has("io") ? "active" : ""}">切れる共有</span>` : ""}
           ${state.flags.ev07_done ? `<span class="tag ${picked.has("nagi") ? "active" : ""}">未命名の驚異</span>` : ""}
           ${state.flags.ev12_done ? `<span class="tag ${picked.has("kaede") ? "active" : ""}">命令しない神</span>` : ""}
+          ${state.flags.atelier_improv_done ? `<span class="tag ${picked.has("soli") ? "active" : ""}">一度きりの即興</span>` : ""}
         </div>
       `;
       document.getElementById("system-content").innerHTML = html;

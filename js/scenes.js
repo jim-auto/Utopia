@@ -236,6 +236,56 @@ export function getSceneHandlers(game) {
         choices: [{ label: "プレゼンス — どちらに参加するか", action: () => renderPresence("chapter2") }],
       }),
 
+    atelier_improv_intro: () =>
+      go({
+        chapter: "第二章",
+        title: "初演のリハーサル — 即興",
+        body: `
+          <p>会場の骨組みが立ち上がる。ソリは指揮棒を置き、あなたを円陣に招く。</p>
+          ${state.refusal === "art" ? "<p>あなたは<strong>完成</strong>を拒んだ。ソリは言う。「即興には完成がない——それでも、作品と呼べるか」</p>" : ""}
+          ${state.refusal === "fame" ? "<p>あなたは<strong>名声</strong>を拒んだ。ここでは、聴衆も記録もない。居合わせた者だけが、音を持つ。</p>" : ""}
+          ${say("soli", "録音しない。再演もしない。今夜の拍だけを、初演の骨格にしよう。")}
+          <p>身体的実践（SYS-07）——拍に合わせて即興する。二度と同じ演奏はできない。</p>
+        `,
+        location: "アトリエ",
+        mood: "mars",
+        art: "atelier",
+        speaker: "soli",
+        choices: [
+          {
+            label: "即興リハーサルに参加する",
+            hint: "Space / タップ — 拍の輪が重なる瞬間に奏でる",
+            action: () => renderAtelierImprov(),
+          },
+          {
+            label: "舞台裏の作業だけ手伝う",
+            action: () => {
+              state.flags.atelier_improv_skipped = true;
+              go("chapter2b");
+            },
+          },
+        ],
+      }),
+
+    atelier_improv_result: () => {
+      const r = state.improvResult;
+      go({
+        chapter: "第二章",
+        title: "即興のあと — 誓約へ",
+        body: `
+          <p>演奏ID <code>${r?.signature || "—"}</code> — この即興は、もう存在しない。</p>
+          <p class="sim-lead">${r?.lead || ""}</p>
+          ${say("soli", r?.soliQuote || "初演の準備を続けよう。")}
+          <p>会場は完成に近づいた。いよいよ、誓約の話になる。</p>
+        `,
+        location: "アトリエ",
+        mood: "vow",
+        art: "atelier",
+        speaker: "soli",
+        choices: [{ label: "最後の初演 — 誓約の場へ", action: () => go("chapter2b") }],
+      });
+    },
+
     chapter2b: () => {
       if (state.flags.joinedConcert) {
         go({
