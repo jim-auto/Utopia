@@ -107,6 +107,44 @@ body { overflow-x: hidden; }
   white-space: nowrap;
 }
 
+.world3d-hint-near {
+  color: var(--mood-accent);
+  border-color: color-mix(in srgb, var(--mood-accent) 45%, transparent);
+  box-shadow: 0 0 20px var(--mood-glow);
+}
+
+.touch-stick {
+  position: fixed;
+  left: 1.25rem;
+  bottom: 5.5rem;
+  z-index: 5;
+  width: 120px;
+  height: 120px;
+  touch-action: none;
+}
+
+.touch-stick-base {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(10, 16, 28, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.touch-stick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: color-mix(in srgb, var(--mood-accent) 35%, rgba(10, 16, 28, 0.9));
+  border: 1px solid color-mix(in srgb, var(--mood-accent) 50%, transparent);
+  box-shadow: 0 0 16px var(--mood-glow);
+}
+
 body.mode-3d #ambient-canvas,
 body.mode-3d .ambient-gradient { opacity: 0.35; }
 

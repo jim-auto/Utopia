@@ -27,6 +27,12 @@ const tmpVec = new THREE.Vector3();
 
 const WORLD_BOUNDS = 24;
 const MOVE_SPEED = 8.5;
+const DEFAULT_HINT = "WASD / 矢印 — 移動 · ドラッグ — 視点 · ホイール — 距離";
+const TOUCH_HINT = "左スティック — 移動 · ドラッグ — 視点";
+const SYSTEM_HINT = "条項を選んでください（移動は一時停止）";
+
+const touchInput = { x: 0, z: 0, active: false };
+let currentSpeaker = null;
 
 const WORLD_CONFIG = {
   garden: {
@@ -666,6 +672,108 @@ function updatePlayerAccent() {
   }
 }
 
+function getDefaultHint() {
+  return "ontouchstart" in window ? TOUCH_HINT : DEFAULT_HINT;
+}
+
+function updateProximityHint() {
+  const hint = document.getElementById("world3d-hint");
+  if (!hint || !explorationEnabled) return;
+
+  let nearest = null;
+  let nearestDist = Infinity;
+
+  const lm = WORLD_LANDMARKS[currentWorldId];
+  if (lm) {
+    const d = Math.hypot(player.position.x - lm.position[0], player.position.z - lm.position[2]);
+    if (d < nearestDist) {
+      nearestDist = d;
+      nearest = { label: lm.label, dist: d, kind: "landmark" };
+    }
+  }
+
+  if (npcBeacon) {
+    const d = Math.hypot(player.position.x - npcBeacon.position.x, player.position.z - npcBeacon.position.z);
+    if (d < nearestDist) {
+      nearestDist = d;
+      nearest = {
+        label: currentSpeaker ? NPC_LABELS[currentSpeaker] : "誰か",
+        dist: d,
+        kind: "npc",
+      };
+    }
+  }
+
+  if (nearest && nearest.dist < 6) {
+    hint.classList.add("world3d-hint-near");
+    if (nearest.dist < 3.2) {
+      hint.textContent =
+        nearest.kind === "npc"
+          ? `${nearest.label} のそば — パネルの選択を読む`
+          : `${nearest.label} — ここにいる`;
+    } else {
+      hint.textContent = `${nearest.label} へ近づいている…`;
+    }
+  } else {
+    hint.classList.remove("world3d-hint-near");
+    hint.textContent = getDefaultHint();
+  }
+}
+
+function bindTouchStick() {
+  const stick = document.getElementById("touch-stick");
+  const knob = document.getElementById("touch-stick-knob");
+  if (!stick || !knob) return;
+
+  const maxRadius = 42;
+  let pointerId = null;
+  let centerX = 0;
+  let centerY = 0;
+
+  stick.addEventListener("pointerdown", (e) => {
+    if (!explorationEnabled) return;
+    pointerId = e.pointerId;
+    const rect = stick.getBoundingClientRect();
+    centerX = rect.left + rect.width / 2;
+    centerY = rect.top + rect.height / 2;
+    touchInput.active = true;
+    stick.setPointerCapture(e.pointerId);
+    moveKnob(e.clientX, e.clientY);
+    e.preventDefault();
+  });
+
+  stick.addEventListener("pointermove", (e) => {
+    if (e.pointerId !== pointerId) return;
+    moveKnob(e.clientX, e.clientY);
+    e.preventDefault();
+  });
+
+  function release(e) {
+    if (e.pointerId !== pointerId) return;
+    pointerId = null;
+    touchInput.active = false;
+    touchInput.x = 0;
+    touchInput.z = 0;
+    knob.style.transform = "translate(-50%, -50%)";
+  }
+
+  stick.addEventListener("pointerup", release);
+  stick.addEventListener("pointercancel", release);
+
+  function moveKnob(clientX, clientY) {
+    let dx = clientX - centerX;
+    let dy = clientY - centerY;
+    const len = Math.hypot(dx, dy);
+    if (len > maxRadius) {
+      dx = (dx / len) * maxRadius;
+      dy = (dy / len) * maxRadius;
+    }
+    knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+    touchInput.x = dx / maxRadius;
+    touchInput.z = -dy / maxRadius;
+  }
+}
+
 function bindInput() {
   window.addEventListener("keydown", (e) => {
     if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d"].includes(e.key)) {
@@ -719,6 +827,10 @@ function updatePlayer(dt) {
   if (keys.has("s") || keys.has("arrowdown")) move.sub(forward);
   if (keys.has("d") || keys.has("arrowright")) move.add(right);
   if (keys.has("a") || keys.has("arrowleft")) move.sub(right);
+
+  if (touchInput.active && (touchInput.x !== 0 || touchInput.z !== 0)) {
+    move.add(new THREE.Vector3(touchInput.x, 0, touchInput.z));
+  }
 
   if (move.lengthSq() > 0) {
     move.normalize();
@@ -807,6 +919,7 @@ function tick() {
   updatePlayer(dt);
   updateCamera(dt);
   animateWorld(dt);
+  updateProximityHint();
 
   composer.render();
   labelRenderer.render(scene, camera);
@@ -916,6 +1029,7 @@ export function initWorld3d() {
 
   clock = new THREE.Clock();
   bindInput();
+  bindTouchStick();
   loadWorld("garden", true);
 
   window.addEventListener("resize", onResize);
@@ -938,8 +1052,10 @@ export function showWorld3d() {
   document.body.classList.add("mode-3d");
   const wrap = document.getElementById("world3d-wrap");
   const hint = document.getElementById("world3d-hint");
+  const stick = document.getElementById("touch-stick");
   if (wrap) wrap.hidden = false;
   if (hint) hint.hidden = false;
+  if (stick) stick.hidden = !("ontouchstart" in window);
   if (!rafId && renderer) tick();
   onResize();
 }
@@ -950,22 +1066,29 @@ export function hideWorld3d() {
   document.body.classList.remove("mode-3d");
   const wrap = document.getElementById("world3d-wrap");
   const hint = document.getElementById("world3d-hint");
+  const stick = document.getElementById("touch-stick");
   if (wrap) wrap.hidden = true;
   if (hint) hint.hidden = true;
+  if (stick) stick.hidden = true;
 }
 
 export function setExplorationEnabled(enabled) {
   explorationEnabled = enabled && visible;
   const hint = document.getElementById("world3d-hint");
   if (hint) {
-    hint.textContent = enabled
-      ? "WASD / 矢印 — 移動 · ドラッグ — 視点 · ホイール — 距離"
-      : "条項を選んでください（移動は一時停止）";
+    hint.classList.remove("world3d-hint-near");
+    hint.textContent = enabled ? getDefaultHint() : SYSTEM_HINT;
+  }
+  if (!enabled) {
+    touchInput.active = false;
+    touchInput.x = 0;
+    touchInput.z = 0;
   }
 }
 
 export function setWorldFromScene(sceneMeta) {
   if (!scene) return;
+  currentSpeaker = sceneMeta.speaker || null;
   const worldId = mapSceneToWorld(sceneMeta);
   const sameWorld = worldId === currentWorldId && worldRoot;
   loadWorld(worldId, !sameWorld);
