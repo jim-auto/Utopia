@@ -149,7 +149,7 @@ export function getSystemMeta(systemId) {
 export function animateSceneText() {
   const body = document.getElementById("scene-body");
   if (!body) return;
-  const nodes = body.querySelectorAll("p, blockquote, li, .ending-card");
+  const nodes = body.querySelectorAll("p, blockquote, li, .ending-card, .dialogue-block");
   nodes.forEach((node, i) => {
     node.classList.add("reveal");
     node.style.animationDelay = `${0.08 + i * 0.12}s`;
@@ -275,8 +275,14 @@ function artCouncil() {
 function artEnding() {
   return `
     <svg viewBox="0 0 400 220" class="scene-svg" aria-hidden="true">
+      <defs>
+        <radialGradient id="endingGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="var(--mood-accent)" stop-opacity="0.5"/>
+          <stop offset="100%" stop-color="var(--mood-accent)" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
       <path d="M0 180 Q200 120 400 160" fill="none" stroke="var(--mood-accent)" stroke-width="2" opacity="0.35"/>
-      <circle cx="200" cy="100" r="40" fill="url(#gateGlow)" class="pulse"/>
+      <circle cx="200" cy="100" r="40" fill="url(#endingGlow)" class="pulse"/>
       <path d="M200 60 L200 140 M160 100 L240 100" stroke="#f0e6c8" stroke-width="1" opacity="0.35"/>
       ${[0, 1, 2, 3, 4].map((i) => `
         <circle cx="${80 + i * 60}" cy="${150 - (i % 2) * 20}" r="2.5" fill="var(--mood-accent)" opacity="0.5"/>`).join("")}

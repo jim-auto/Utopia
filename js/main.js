@@ -15,7 +15,9 @@ import {
   hideRestart,
 } from "./ui.js";
 import { getSceneHandlers, renderEpilogue } from "./scenes.js";
+import { miniPortrait } from "./portraits.js";
 import { initAmbience, setMood } from "./visuals.js";
+import { initAudio, bindAudioToggle } from "./audio.js";
 
 const scenes = {};
 
@@ -65,6 +67,7 @@ export function createGame() {
       mood: opts.mood,
       art: opts.art,
       titleScreen: opts.titleScreen,
+      speaker: opts.speaker,
     });
   }
 
@@ -295,9 +298,12 @@ export function createGame() {
         ${reasons
           .map(
             (r) => `
-          <div class="reason-card ${picked.has(r.id) ? "selected" : ""}" data-id="${r.id}" style="cursor:pointer;${picked.has(r.id) ? "border-left-color:var(--accent-gold)" : ""}">
-            <div class="speaker">${r.speaker}</div>
-            <div>${r.text}</div>
+          <div class="reason-card ${picked.has(r.id) ? "selected" : ""}" data-id="${r.id}">
+            <div class="reason-card-head">
+              ${miniPortrait(r.id)}
+              <div class="speaker">${r.speaker}</div>
+            </div>
+            <div class="reason-text">${r.text}</div>
             <div class="context">${r.context}</div>
           </div>
         `
@@ -392,6 +398,8 @@ export function createGame() {
 
 export function startGame() {
   initAmbience();
+  initAudio();
+  bindAudioToggle();
   setMood("cosmos");
   const game = createGame();
   game.go("title");

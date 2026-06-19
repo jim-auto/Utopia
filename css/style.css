@@ -291,6 +291,105 @@ body { overflow-x: hidden; }
   box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.15);
 }
 
+.dialogue-block {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: start;
+  margin: 1.5rem 0;
+  padding: 1rem 1.15rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--npc-color, var(--mood-accent)) 25%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--npc-color, var(--mood-accent)) 8%, transparent), rgba(0,0,0,0.15));
+}
+
+.dialogue-block blockquote {
+  margin: 0.5rem 0 0;
+  padding: 0.75rem 0 0.75rem 1rem;
+  border-left-color: var(--npc-color, var(--mood-accent));
+  background: transparent;
+  box-shadow: none;
+  font-size: 1rem;
+}
+
+.dialogue-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.25rem;
+}
+
+.dialogue-name {
+  font-weight: 500;
+  color: var(--npc-color, var(--mood-accent));
+  font-size: 0.9rem;
+}
+
+.dialogue-role {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.speaker-strip {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--npc-color, var(--mood-accent)) 30%, transparent);
+  background: color-mix(in srgb, var(--npc-color, var(--mood-accent)) 6%, transparent);
+  animation: reveal 0.6s ease forwards;
+}
+
+.speaker-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.speaker-name {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--npc-color, var(--mood-accent));
+}
+
+.speaker-role {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.portrait {
+  --portrait-size: 64px;
+  width: var(--portrait-size);
+  height: var(--portrait-size);
+  flex-shrink: 0;
+}
+
+.portrait-xs { --portrait-size: 36px; }
+.portrait-sm { --portrait-size: 52px; }
+.portrait-md { --portrait-size: 64px; }
+.portrait-lg { --portrait-size: 80px; }
+
+.portrait-frame {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--npc-color, var(--mood-accent)) 50%, transparent);
+  background: radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--npc-color) 20%, transparent), rgba(0,0,0,0.4));
+  box-shadow: 0 0 20px color-mix(in srgb, var(--npc-color, var(--mood-accent)) 25%, transparent);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portrait-svg {
+  width: 85%;
+  height: 85%;
+}
+
 .reveal {
   opacity: 0;
   animation: reveal 0.7s ease forwards;
@@ -500,6 +599,18 @@ body { overflow-x: hidden; }
   transition: all 0.25s ease;
 }
 
+.reason-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.5rem;
+}
+
+.reason-text {
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
 .reason-card:hover {
   background: rgba(212, 132, 154, 0.1);
   transform: translateX(4px);
@@ -617,7 +728,13 @@ body { overflow-x: hidden; }
   line-height: 1.55;
 }
 
-.sidebar li { margin-bottom: 0.4rem; }
+.sidebar li em {
+  font-style: normal;
+  color: var(--mood-accent);
+  font-size: 0.68rem;
+}
+
+.vow-active { color: var(--text-secondary); }
 
 .footer {
   position: relative;
@@ -625,10 +742,22 @@ body { overflow-x: hidden; }
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--bg-panel-border);
   background: rgba(6, 10, 18, 0.72);
   backdrop-filter: var(--glass-blur);
+}
+
+.footer-left {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-icon {
+  font-size: 0.8rem;
+  padding: 0.5rem 0.85rem;
 }
 
 .footer-note {
@@ -689,6 +818,8 @@ body { overflow-x: hidden; }
   .panel-inner { padding: 1.35rem 1.15rem 1.5rem; }
   .scene-hero-wrap { height: 150px; }
   .system-hero-wrap { height: 110px; }
+  .dialogue-block { grid-template-columns: 1fr; }
+  .speaker-strip { flex-direction: column; text-align: center; }
   .conflict-box { grid-template-columns: 1fr; }
   .conflict-divider { padding: 0.5rem 0; }
   .gain-loss { grid-template-columns: 1fr; }

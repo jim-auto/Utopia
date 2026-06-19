@@ -51,6 +51,7 @@
           <div class="scene-hero-fade"></div>
         </div>
         <div class="panel-inner">
+          <div class="speaker-strip" id="speaker-strip" hidden></div>
           <p class="chapter-tag" id="chapter-tag"></p>
           <h1 class="scene-title" id="scene-title"></h1>
           <div class="scene-body" id="scene-body"></div>
@@ -88,7 +89,10 @@
     </aside>
 
     <footer class="footer" id="footer">
-      <button type="button" class="btn btn-ghost" id="btn-restart" hidden>最初から</button>
+      <div class="footer-left">
+        <button type="button" class="btn btn-ghost btn-icon" id="btn-audio" aria-pressed="false">🔊 音 ON</button>
+        <button type="button" class="btn btn-ghost" id="btn-restart" hidden>最初から</button>
+      </div>
       <span class="footer-note">UTOPIA prototype — 約20分</span>
     </footer>
   </div>

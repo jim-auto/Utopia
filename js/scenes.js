@@ -1,4 +1,5 @@
 import { ENDINGS, REFUSALS } from "./state.js";
+import { say } from "./portraits.js";
 
 export function getSceneHandlers(game) {
   const { state, go, renderRefusalPicker, renderPresence, renderCovenant, renderDeliberation, renderEndingPicker, renderEpilogue } = game;
@@ -98,15 +99,16 @@ export function getSceneHandlers(game) {
         art: metAster ? "palimpsest" : "horizon",
         body: metAster
           ? `
-          <p>月・パリンプセスト。記録の海の端で、センは静かに言う。</p>
-          <blockquote>安全な家があるのに出ていくことを、我々は勇気と呼ぶべきではない。残る者の人生を二流にしてはならない。</blockquote>
+          <p>月・パリンプセスト。記録の海の端で、センがあなたを迎える。</p>
+          ${say("sen", "安全な家があるのに出ていくことを、我々は勇気と呼ぶべきではない。残る者の人生を二流にしてはならない。")}
           <p>あなたはアスターのもとには間に合わなかった。彼からの手紙だけが届く。「不可逆性は、初めて自由になる」と。</p>
         `
           : `
-          <p>土星圏・ホライズン。アスターは門の向こうを見ながら言う。</p>
-          <blockquote>これは、人類が初めて自由に選べる、真の不可逆性だ。</blockquote>
+          <p>土星圏・ホライズン。アスターは門の向こうを見つめている。</p>
+          ${say("aster", "これは、人類が初めて自由に選べる、真の不可逆性だ。")}
           <p>センのもとには間に合わなかった。記録庫から届いたのは短い文だけ。「残ることも、冒険と同じ重さを持て」。</p>
         `,
+        speaker: metAster ? "sen" : "aster",
         choices: [{ label: "第二章へ — 約束の重さ", action: () => go("chapter2") }],
       });
     },
@@ -133,12 +135,13 @@ export function getSceneHandlers(game) {
           chapter: "第二章",
           title: "最後の初演 — 誓約",
           body: `
-            <p>会場は完成した。演奏まであと三ヶ月。ソリがあなたを見る。</p>
-            <p>「記録しない。再演しない。口伝えも、共同体の規則で禁止する——あなたは、その約束に署名できますか？」</p>
+            <p>会場は完成した。演奏まであと三ヶ月。ソリが静かにこちらを見る。</p>
+            ${say("soli", "記録しない。再演しない。口伝えも、共同体の規則で禁止する——あなたは、その約束に署名できますか？")}
           `,
           location: "アトリエ",
           mood: "vow",
           art: "atelier",
+          speaker: "soli",
           choices: [
             {
               label: "誓約する — 記録も口伝えもしない",
@@ -146,7 +149,7 @@ export function getSceneHandlers(game) {
               action: () => {
                 game.addVow({ label: "初演を記録・再演・口伝えしない", with: "ソリ" });
                 game.bumpTrust("soli", 2);
-                go("chapter3");
+                go("chapter2c");
               },
             },
             {
@@ -189,20 +192,44 @@ export function getSceneHandlers(game) {
       }
     },
 
+    chapter2c: () =>
+      go({
+        chapter: "第二章",
+        title: "最後の初演 — 二十年後",
+        body: `
+          <p>二十年。演奏は一度だけ、守られた。沈黙は、共同体の誇りになった。</p>
+          <p>だが、当時の演奏者が曲の断片を子どもへ教えたという噂が広がる。共同体は「誓約違反だ」と主張する。</p>
+          ${say("soli", "自分の記憶まで、共同体の所有物ではない。")}
+          ${say("child", "文化を未来へ伝えないための約束を、文化と呼べるのですか。")}
+          <p>正解はない。あなたは、この争いを見届けた。</p>
+        `,
+        period: 2,
+        location: "アトリエ",
+        mood: "vow",
+        art: "atelier",
+        speaker: "child",
+        choices: [
+          {
+            label: "第三章へ — 未来人の問い",
+            action: () => go("chapter3"),
+          },
+        ],
+      }),
+
     chapter3: () =>
       go({
         chapter: "第三章",
         title: "まだ存在しない者たち",
         body: `
-          <p>20年が経った。${state.flags.joinedConcert ? "ソリの初演は、伝説ではなく、沈黙として残った。" : "無名の集団は、次世代によって再解釈されている。"}</p>
-          <p>子どもたちの代表が、成人を前にこう問う。</p>
-          <blockquote>あなたたちが退屈だから、私たちの未来を一つ減らすのですか。</blockquote>
+          <p>20年が経った。${state.flags.joinedConcert ? "ソリの初演と、その後の沈黙の争いが、共同体に深い亀裂を残した。" : "無名の集団は、次世代によって再解釈されている。"}</p>
+          ${say("child", "あなたたちが退屈だから、私たちの未来を一つ減らすのですか。")}
           <p>船団の設計——未来人の同意——を、抽象論ではなく制度として組む時が来た。</p>
         `,
         period: 3,
         location: "ホライズン",
         mood: "law",
         art: "covenant",
+        speaker: "child",
         choices: [{ label: "コヴナント・グラマー — 制度を試作する", action: () => renderCovenant() }],
       }),
 

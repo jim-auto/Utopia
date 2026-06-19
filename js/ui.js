@@ -7,6 +7,14 @@ import {
   moodFromLocation,
   getSystemMeta,
 } from "./visuals.js";
+import { renderSpeakerStrip } from "./portraits.js";
+import { setAudioMood, playClick } from "./audio.js";
+
+function applyMood(moodId) {
+  if (!moodId) return;
+  setMood(moodId);
+  setAudioMood(moodId);
+}
 
 const narrativePanel = () => document.getElementById("narrative-panel");
 const systemPanel = () => document.getElementById("system-panel");
@@ -29,6 +37,7 @@ export function setHud(state) {
   document.getElementById("hud-location").textContent = state.location;
   document.getElementById("hud-trust").textContent = state.witnessTier;
   setMood(moodFromLocation(state.location));
+  setAudioMood(moodFromLocation(state.location));
   updatePeriodProgress(state.period);
   renderSidebar(state);
 }
@@ -58,10 +67,11 @@ export function renderSidebar(state) {
       : state.missed.map((m) => `<li>${m}</li>`).join("");
 }
 
-export function renderScene({ chapter, title, body, choices = [], mood, art, titleScreen = false }) {
+export function renderScene({ chapter, title, body, choices = [], mood, art, titleScreen = false, speaker }) {
   showNarrative();
-  if (mood) setMood(mood);
+  if (mood) applyMood(mood);
   renderSceneHero(art || "title");
+  renderSpeakerStrip(speaker);
 
   const panel = narrativePanel();
   panel.classList.toggle("title-screen", titleScreen);
@@ -84,7 +94,10 @@ export function renderScene({ chapter, title, body, choices = [], mood, art, tit
     } else {
       btn.textContent = choice.label;
     }
-    btn.addEventListener("click", choice.action);
+    btn.addEventListener("click", () => {
+      playClick();
+      choice.action();
+    });
     container.appendChild(btn);
   });
 
@@ -97,7 +110,7 @@ export function renderScene({ chapter, title, body, choices = [], mood, art, tit
 export function renderSystem({ title, desc, contentHtml, actions = [], systemId = "presence" }) {
   showSystem();
   const meta = getSystemMeta(systemId);
-  setMood(meta.mood);
+  applyMood(meta.mood);
 
   const hero = document.getElementById("system-hero");
   if (hero) hero.innerHTML = getSceneArtHtml(meta.art);
@@ -116,7 +129,10 @@ export function renderSystem({ title, desc, contentHtml, actions = [], systemId 
     btn.type = "button";
     btn.className = action.danger ? "btn btn-choice btn-danger" : "btn btn-primary";
     btn.textContent = action.label;
-    btn.addEventListener("click", action.action);
+    btn.addEventListener("click", () => {
+      playClick();
+      action.action();
+    });
     container.appendChild(btn);
   });
 
