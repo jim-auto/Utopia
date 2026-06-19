@@ -39,6 +39,11 @@ const NPCS = {
     role: "案内人 / コーラス",
     color: "#e8a8c8",
   },
+  nagi: {
+    name: "ナギ",
+    role: "深層探査 / アビス",
+    color: "#5ec8d8",
+  },
 };
 
 function portraitSvg(id) {
@@ -107,6 +112,12 @@ function portraitSvg(id) {
       <circle cx="50" cy="50" r="6" fill="${npc.color}" opacity="0.35"/>
       <path d="M38 42 Q44 46 50 50 Q56 46 62 42" fill="none" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
       <path d="M38 42 Q44 54 50 58 Q56 54 62 42" fill="none" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
+    `,
+    nagi: `
+      <path d="M20 75 Q50 20 80 75" fill="none" stroke="${npc.color}" stroke-width="1.2"/>
+      <path d="M35 75 L35 45 L50 30 L65 45 L65 75" fill="none" stroke="${npc.color}" stroke-width="1.2"/>
+      <circle cx="50" cy="28" r="8" fill="none" stroke="${npc.color}" stroke-width="1.2"/>
+      <path d="M42 55 L58 55" stroke="${npc.color}" stroke-width="0.8" opacity="0.5"/>
     `,
   };
 

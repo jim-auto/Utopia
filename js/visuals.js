@@ -49,6 +49,11 @@ const MOODS = {
     glow: "rgba(232, 168, 200, 0.35)",
     gradient: ["#100810", "#201018", "#301828"],
   },
+  abyss: {
+    accent: "#5ec8d8",
+    glow: "rgba(94, 200, 216, 0.35)",
+    gradient: ["#040810", "#081820", "#0c2830"],
+  },
 };
 
 const SCENE_ART = {
@@ -135,6 +140,7 @@ export function moodFromLocation(location = "") {
   if (location.includes("ホライズン") || location.includes("土星")) return "council";
   if (location.includes("コモン") || location.includes("地球")) return "garden";
   if (location.includes("コーラス") || location.includes("金星")) return "chorus";
+  if (location.includes("アビス") || location.includes("エウロパ")) return "abyss";
   return "cosmos";
 }
 

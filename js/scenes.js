@@ -14,6 +14,10 @@ import {
   getFeaturedQuote as getEvent06Quote,
 } from "./covenant-event-06.js";
 import {
+  renderOutcomeCards as renderEvent07Cards,
+  getFeaturedQuote as getEvent07Quote,
+} from "./covenant-event-07.js";
+import {
   renderOutcomeCards as renderEvent12Cards,
   getFeaturedQuote as getEvent12Quote,
 } from "./covenant-event-12.js";
@@ -28,6 +32,7 @@ export function getSceneHandlers(game) {
     renderEvent04Covenant,
     renderEvent05Covenant,
     renderEvent06Covenant,
+    renderEvent07Covenant,
     renderEvent12Covenant,
     renderDeliberation,
     renderEndingPicker,
@@ -413,6 +418,11 @@ export function getSceneHandlers(game) {
             action: () => go("event04_intro"),
           },
           {
+            label: "アビス — 深層の命名（事件 #07）",
+            hint: "驚異の保護 × 知の公開 × 探索のリスク",
+            action: () => go("event07_intro"),
+          },
+          {
             label: "ホライズン — 出発憲章の試行（事件 #03）",
             hint: "未来人の同意を制度として組む",
             action: () => renderCovenant(),
@@ -461,6 +471,61 @@ export function getSceneHandlers(game) {
         location: "パリンプセスト",
         mood: sim.tension === "high" ? "vow" : "memory",
         art: "palimpsest",
+        speaker: quote?.npc,
+        choices: [
+          {
+            label: "ホライズンへ — 出発憲章の試行を始める",
+            action: () => {
+              state.location = "ホライズン";
+              renderCovenant();
+            },
+          },
+        ],
+      });
+    },
+
+    event07_intro: () =>
+      go({
+        chapter: "第三章",
+        title: "深層の命名",
+        body: `
+          <p>エウロパ・アビス。氷の下の海で、未命名の生物と未公開のデータが同時に存在する。</p>
+          ${state.refusal === "fame" ? "<p>あなたは<strong>名声</strong>を拒んだ。ナギは「発見者なき記録」を試している。</p>" : ""}
+          ${state.refusal === "immortality" ? "<p>あなたは<strong>永遠の生命</strong>を拒んだ。不可逆な深層リスクが、ここでは日常だ。</p>" : ""}
+          ${say("nagi", "名前は、捕まえることでもある。急ぐ名前は、所有の始まりだ。")}
+          ${say("lin", "データを公開しなければ、未来は盲目的になる——ただし、驚異を要約できないものもある。")}
+          <p>3D空間で<strong>深層クレバス</strong>へ近づき、<strong>E</strong>で調べてから、条項を提案しよう。</p>
+        `,
+        period: 3,
+        location: "アビス",
+        mood: "abyss",
+        art: "abyss",
+        speaker: "nagi",
+        choices: [
+          {
+            label: "コヴナント・グラマー — 深層探査の条項を組む",
+            action: () => renderEvent07Covenant(),
+          },
+        ],
+      }),
+
+    event07_revisit: () => {
+      const sim = state.event07Sim || { summary: "", outcomes: [], tension: "medium" };
+      const quote = getEvent07Quote(sim);
+      go({
+        chapter: "第三章",
+        title: "深層の命名 — 五年後",
+        body: `
+          <p class="sim-lead">${sim.summary}</p>
+          ${renderEvent07Cards(sim.outcomes)}
+          <p>仮名期間、公開義務、引き上げ——条項は実行されたが、探査者たちは<strong>要約版</strong>という抜け道を invent した。</p>
+          ${quote ? say(quote.npc, quote.quote) : ""}
+          <p>アビスでの経験は、出発憲章にも影響を与えるだろう。</p>
+        `,
+        period: 3,
+        location: "アビス",
+        mood: sim.tension === "high" ? "vow" : "abyss",
+        art: "abyss",
         speaker: quote?.npc,
         choices: [
           {
@@ -603,6 +668,7 @@ export function renderEpilogue(game) {
   if (state.flags.ev04_done) processNote += "忘れと記録の境界を試した。";
   if (state.flags.ev05_done) processNote += "終わらない庭の試行を見届けた。";
   if (state.flags.ev06_done) processNote += "切れる共有の試行を見届けた。";
+  if (state.flags.ev07_done) processNote += "未命名の驚異の試行を見届けた。";
   if (state.flags.ev12_done) processNote += "命令しない神の条件を設計した。";
   if (state.flags.ev12_skipped) processNote += "モザイク試行を見送った。";
   if (state.ending === "mosaic" && state.event12Sim?.safeguards) {

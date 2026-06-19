@@ -145,6 +145,69 @@ body { overflow-x: hidden; }
   box-shadow: 0 0 16px var(--mood-glow);
 }
 
+.btn-interact {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 5.5rem;
+  z-index: 5;
+  padding: 0.55rem 1.1rem;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  background: rgba(10, 16, 28, 0.82);
+  border: 1px solid color-mix(in srgb, var(--mood-accent) 45%, transparent);
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  box-shadow: 0 0 20px var(--mood-glow);
+}
+
+.btn-interact:hover {
+  border-color: var(--mood-accent);
+}
+
+.world3d-toast {
+  position: fixed;
+  top: 5.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  max-width: min(420px, calc(100% - 2rem));
+  padding: 0.85rem 1.1rem;
+  background: rgba(10, 16, 28, 0.9);
+  border: 1px solid color-mix(in srgb, var(--mood-accent) 35%, transparent);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
+  pointer-events: none;
+  animation: toastIn 0.35s ease;
+}
+
+.world3d-toast.fade-out {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.world3d-toast strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--mood-accent);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+}
+
+.world3d-toast p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 body.mode-3d #ambient-canvas,
 body.mode-3d .ambient-gradient { opacity: 0.35; }
 

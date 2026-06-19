@@ -27,12 +27,16 @@ const tmpVec = new THREE.Vector3();
 
 const WORLD_BOUNDS = 24;
 const MOVE_SPEED = 8.5;
-const DEFAULT_HINT = "WASD / 矢印 — 移動 · ドラッグ — 視点 · ホイール — 距離";
-const TOUCH_HINT = "左スティック — 移動 · ドラッグ — 視点";
+const DEFAULT_HINT = "WASD / 矢印 — 移動 · ドラッグ — 視点 · ホイール — 距離 · V — 一人称";
+const TOUCH_HINT = "左スティック — 移動 · ドラッグ — 視点 · 調べる";
 const SYSTEM_HINT = "条項を選んでください（移動は一時停止）";
 
 const touchInput = { x: 0, z: 0, active: false };
 let currentSpeaker = null;
+let firstPerson = false;
+let nearestInteract = null;
+let onDiscover = null;
+const discoveredIds = new Set();
 
 const WORLD_CONFIG = {
   garden: {
@@ -83,6 +87,14 @@ const WORLD_CONFIG = {
     sun: 0.5,
     bloom: 0.42,
   },
+  abyss: {
+    fog: 0.045,
+    fogColor: "#040810",
+    skyTop: "#0c3040",
+    skyBottom: "#020408",
+    sun: 0.35,
+    bloom: 0.55,
+  },
 };
 
 const NPC_LABELS = {
@@ -94,6 +106,7 @@ const NPC_LABELS = {
   kaede: "カエデ",
   haru: "ハル",
   io: "イオ",
+  nagi: "ナギ",
 };
 
 const WORLD_LANDMARKS = {
@@ -103,6 +116,38 @@ const WORLD_LANDMARKS = {
   palimpsest: { label: "記録の環", position: [0, 3.2, 0] },
   atelier: { label: "初演の舞台", position: [0, 3.5, -4] },
   council: { label: "公共議会", position: [0, 2.5, 0] },
+  abyss: { label: "深層クレバス", position: [0, 1.5, -6] },
+};
+
+const WORLD_DISCOVERIES = {
+  garden: {
+    id: "garden_festival",
+    text: "百年祭の光の糸。記録も再生もない——ただ、その場にいた者だけが知っている。",
+  },
+  horizon: {
+    id: "horizon_gate",
+    text: "門は約90年後に閉じる。不可逆だが、避難命令ではない。選べる驚異。",
+  },
+  chorus: {
+    id: "chorus_share",
+    text: "感覚は分かち合える。ただし、境界線は消えない——切れる共有。",
+  },
+  palimpsest: {
+    id: "palimpsest_ring",
+    text: "記録の環。削除と匿名化のあいだに、まだ名前のない記憶がある。",
+  },
+  atelier: {
+    id: "atelier_stage",
+    text: "一度きりの舞台。完成するが、再演しない——約束が作品になる。",
+  },
+  council: {
+    id: "council_mosaic",
+    text: "命令しない神の座。暴走ではなく、自発的服従が問題だ。",
+  },
+  abyss: {
+    id: "abyss_trench",
+    text: "未命名の深層。ここでは、驚異に急いで名を付けない——仮名期間が保護になる。",
+  },
 };
 
 function seededRandom(seed) {
@@ -537,6 +582,62 @@ function buildCouncil(accent) {
   return group;
 }
 
+function buildAbyss(accent) {
+  const group = new THREE.Group();
+  group.userData.animated = [];
+  addGround(group, "#0a1820", 44, accent);
+
+  const trench = new THREE.Mesh(
+    new THREE.CylinderGeometry(3.5, 5, 0.8, 32, 1, true),
+    new THREE.MeshStandardMaterial({
+      color: "#020608",
+      emissive: accent,
+      emissiveIntensity: 0.15,
+      side: THREE.DoubleSide,
+    })
+  );
+  trench.position.set(0, -0.2, -6);
+  group.add(trench);
+
+  for (let i = 0; i < 12; i++) {
+    const pillar = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.14, 2.5 + (i % 3) * 0.8, 6),
+      new THREE.MeshStandardMaterial({
+        color: accent,
+        emissive: accent,
+        emissiveIntensity: 0.55,
+        transparent: true,
+        opacity: 0.75,
+      })
+    );
+    const angle = (i / 12) * Math.PI * 2;
+    pillar.position.set(Math.cos(angle) * 8, 1.2, -6 + Math.sin(angle) * 5);
+    group.add(pillar);
+    group.userData.animated.push({ mesh: pillar, type: "pulse", phase: i * 0.5 });
+  }
+
+  const ice = new THREE.Mesh(
+    new THREE.BoxGeometry(14, 0.3, 10),
+    new THREE.MeshStandardMaterial({
+      color: "#1a3040",
+      transparent: true,
+      opacity: 0.6,
+      roughness: 0.2,
+      metalness: 0.1,
+    })
+  );
+  ice.position.set(0, 0.12, -2);
+  group.add(ice);
+
+  addParticles(group, 90, accent, 35, 8, 59);
+
+  const landmark = makeLabel(WORLD_LANDMARKS.abyss.label, "world-label world-label-landmark");
+  landmark.position.set(0, 2.8, -6);
+  group.add(landmark);
+
+  return group;
+}
+
 const WORLD_BUILDERS = {
   garden: buildGarden,
   horizon: buildHorizon,
@@ -544,11 +645,13 @@ const WORLD_BUILDERS = {
   palimpsest: buildPalimpsest,
   atelier: buildAtelier,
   council: buildCouncil,
+  abyss: buildAbyss,
 };
 
 export function mapSceneToWorld({ art, mood, location } = {}) {
   const loc = location || "";
   if (loc.includes("コーラス") || loc.includes("金星")) return "chorus";
+  if (loc.includes("アビス") || loc.includes("エウロパ") || loc.includes("深層")) return "abyss";
   if (loc.includes("月") || loc.includes("パリンプセスト")) return "palimpsest";
   if (loc.includes("火星") || loc.includes("アトリエ")) return "atelier";
   if (loc.includes("ホライズン") || loc.includes("土星")) return "horizon";
@@ -569,6 +672,7 @@ export function mapSceneToWorld({ art, mood, location } = {}) {
     mosaic: "council",
     ending: "horizon",
     refusal: "garden",
+    abyss: "abyss",
   };
   if (art && artMap[art]) return artMap[art];
 
@@ -583,6 +687,7 @@ export function mapSceneToWorld({ art, mood, location } = {}) {
     law: "council",
     council: "council",
     finale: "horizon",
+    abyss: "abyss",
   };
   if (mood && moodMap[mood]) return moodMap[mood];
 
@@ -673,7 +778,55 @@ function updatePlayerAccent() {
 }
 
 function getDefaultHint() {
-  return "ontouchstart" in window ? TOUCH_HINT : DEFAULT_HINT;
+  const fp = firstPerson ? " · 一人称モード" : "";
+  return ("ontouchstart" in window ? TOUCH_HINT : DEFAULT_HINT) + fp;
+}
+
+function showDiscoveryToast(text, title) {
+  const toast = document.getElementById("world3d-toast");
+  if (!toast) return;
+  toast.hidden = false;
+  toast.innerHTML = title
+    ? `<strong>${title}</strong><p>${text}</p>`
+    : `<p>${text}</p>`;
+  toast.classList.remove("fade-out");
+  clearTimeout(showDiscoveryToast._timer);
+  showDiscoveryToast._timer = setTimeout(() => {
+    toast.classList.add("fade-out");
+    setTimeout(() => {
+      toast.hidden = true;
+    }, 400);
+  }, 4200);
+}
+
+export function setDiscoverHandler(fn) {
+  onDiscover = fn;
+}
+
+function tryInteract() {
+  if (!explorationEnabled || !nearestInteract || nearestInteract.dist >= 3.2) return;
+
+  const discovery = WORLD_DISCOVERIES[currentWorldId];
+  if (discovery && !discoveredIds.has(discovery.id)) {
+    discoveredIds.add(discovery.id);
+    showDiscoveryToast(discovery.text, nearestInteract.label);
+    if (onDiscover) onDiscover(discovery);
+    return;
+  }
+
+  if (nearestInteract.kind === "npc" && currentSpeaker) {
+    showDiscoveryToast("パネルの選択が、この場所でのあなたの関与だ。", nearestInteract.label);
+    return;
+  }
+
+  showDiscoveryToast("ここには、まだ名前のないものがある。", nearestInteract.label);
+}
+
+function updateInteractButton() {
+  const btn = document.getElementById("btn-interact");
+  if (!btn) return;
+  const can = explorationEnabled && nearestInteract && nearestInteract.dist < 3.2;
+  btn.hidden = !can;
 }
 
 function updateProximityHint() {
@@ -705,19 +858,23 @@ function updateProximityHint() {
   }
 
   if (nearest && nearest.dist < 6) {
+    nearestInteract = nearest;
     hint.classList.add("world3d-hint-near");
     if (nearest.dist < 3.2) {
+      const action = "ontouchstart" in window ? "調べる" : "E — 調べる";
       hint.textContent =
         nearest.kind === "npc"
-          ? `${nearest.label} のそば — パネルの選択を読む`
-          : `${nearest.label} — ここにいる`;
+          ? `${nearest.label} のそば — ${action}`
+          : `${nearest.label} — ${action}`;
     } else {
       hint.textContent = `${nearest.label} へ近づいている…`;
     }
   } else {
+    nearestInteract = null;
     hint.classList.remove("world3d-hint-near");
     hint.textContent = getDefaultHint();
   }
+  updateInteractButton();
 }
 
 function bindTouchStick() {
@@ -779,6 +936,24 @@ function bindInput() {
     if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d"].includes(e.key)) {
       keys.add(e.key.toLowerCase());
       e.preventDefault();
+    }
+    if (e.key === "e" || e.key === "E") {
+      if (explorationEnabled) {
+        e.preventDefault();
+        tryInteract();
+      }
+    }
+    if (e.key === "v" || e.key === "V") {
+      if (visible && explorationEnabled) {
+        e.preventDefault();
+        firstPerson = !firstPerson;
+        cameraOrbit.distance = firstPerson ? 0.15 : 8;
+        showDiscoveryToast(
+          firstPerson ? "一人称視点。深層の圧が近い。" : "三人称視点に戻った。",
+          "視点"
+        );
+        updateProximityHint();
+      }
     }
   });
   window.addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
@@ -857,8 +1032,20 @@ function updatePlayer(dt) {
 }
 
 function updateCamera(dt) {
-  const targetY = 1.25;
+  const targetY = firstPerson ? 1.55 : 1.25;
   const target = tmpVec.set(player.position.x, targetY, player.position.z);
+
+  if (firstPerson) {
+    const look = new THREE.Vector3(
+      target.x + Math.sin(cameraOrbit.yaw) * Math.cos(cameraOrbit.pitch),
+      target.y + Math.sin(cameraOrbit.pitch) * 0.85,
+      target.z + Math.cos(cameraOrbit.yaw) * Math.cos(cameraOrbit.pitch)
+    );
+    camera.position.lerp(target, 1 - Math.pow(0.0001, dt));
+    camera.lookAt(look);
+    return;
+  }
+
   const offset = new THREE.Vector3(
     Math.sin(cameraOrbit.yaw) * Math.cos(cameraOrbit.pitch) * cameraOrbit.distance,
     Math.sin(cameraOrbit.pitch) * cameraOrbit.distance + 1.2,
@@ -1030,6 +1217,8 @@ export function initWorld3d() {
   clock = new THREE.Clock();
   bindInput();
   bindTouchStick();
+  const interactBtn = document.getElementById("btn-interact");
+  if (interactBtn) interactBtn.addEventListener("click", tryInteract);
   loadWorld("garden", true);
 
   window.addEventListener("resize", onResize);

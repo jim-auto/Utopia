@@ -18,7 +18,7 @@ import { getSceneHandlers, renderEpilogue } from "./scenes.js";
 import { miniPortrait } from "./portraits.js";
 import { initAmbience, setMood } from "./visuals.js";
 import { initAudio, bindAudioToggle } from "./audio.js";
-import { initWorld3d } from "./world3d.js";
+import { initWorld3d, setDiscoverHandler } from "./world3d.js";
 import { simulateFiveYears } from "./covenant-sim.js";
 import {
   buildClauseForm as buildEvent04Form,
@@ -36,7 +36,11 @@ import {
   getDeliberationReason as getEvent06Reason,
 } from "./covenant-event-06.js";
 import {
-  buildClauseForm as buildEvent12Form,
+  buildClauseForm as buildEvent07Form,
+  simulateEvent07,
+  getDeliberationReason as getEvent07Reason,
+} from "./covenant-event-07.js";
+import {
   simulateEvent12,
   getDeliberationReasons as getEvent12Reasons,
   canUnlockMosaicEnding,
@@ -63,6 +67,7 @@ export function createGame() {
     renderEvent04Covenant,
     renderEvent05Covenant,
     renderEvent06Covenant,
+    renderEvent07Covenant,
     renderEvent12Covenant,
     renderDeliberation,
     renderEndingPicker,
@@ -303,6 +308,39 @@ export function createGame() {
     });
   }
 
+  function renderEvent07Covenant() {
+    const selected = new Set(["nameProtection", "exitRecall", "riskConsent"]);
+
+    renderSystem({
+      title: "コヴナント事件 #07 — 深層の命名",
+      desc: "驚異の保護 × 知の公開 × 探索のリスク。急ぐ名前は、所有の始まりだ。",
+      systemId: "covenant",
+      contentHtml: `<div id="event07-form">${buildEvent07Form(selected)}</div>`,
+      actions: [
+        {
+          label: "深層探査で試行を開始する（5年後に再訪）",
+          action: () => {
+            document.querySelectorAll("#event07-form input").forEach((input) => {
+              if (input.checked) state.flags[`ev07_${input.dataset.key}`] = true;
+            });
+            state.flags.ev07_done = true;
+            state.event07Sim = simulateEvent07(state);
+            if (state.flags.ev07_exitRecall) bumpTrust(state, "aster", 1);
+            go("event07_revisit");
+          },
+        },
+      ],
+    });
+
+    document.getElementById("system-content").addEventListener("change", (e) => {
+      if (e.target.type === "checkbox") {
+        const key = e.target.dataset.key;
+        if (e.target.checked) selected.add(key);
+        else selected.delete(key);
+      }
+    });
+  }
+
   function renderEvent12Covenant() {
     const selected = new Set(["noCommand", "periodicVote", "minorityWitness"]);
 
@@ -462,6 +500,10 @@ export function createGame() {
       reasons.push(getEvent06Reason());
     }
 
+    if (state.flags.ev07_done) {
+      reasons.push(getEvent07Reason());
+    }
+
     if (state.flags.ev12_done) {
       reasons.push(...getEvent12Reasons());
     }
@@ -492,6 +534,7 @@ export function createGame() {
           ${state.flags.ev04_done ? `<span class="tag ${picked.has("lin") ? "active" : ""}">記憶の隙間</span>` : ""}
           ${state.flags.ev05_done ? `<span class="tag ${picked.has("haru") ? "active" : ""}">終わらない庭</span>` : ""}
           ${state.flags.ev06_done ? `<span class="tag ${picked.has("io") ? "active" : ""}">切れる共有</span>` : ""}
+          ${state.flags.ev07_done ? `<span class="tag ${picked.has("nagi") ? "active" : ""}">未命名の驚異</span>` : ""}
           ${state.flags.ev12_done ? `<span class="tag ${picked.has("kaede") ? "active" : ""}">命令しない神</span>` : ""}
         </div>
       `;
@@ -582,6 +625,9 @@ export function startGame() {
   bindAudioToggle();
   setMood("cosmos");
   const game = createGame();
+  setDiscoverHandler((discovery) => {
+    game.state.flags[`disc_${discovery.id}`] = true;
+  });
   game.go("title");
 }
 
