@@ -1206,7 +1206,7 @@ export function getSceneHandlers(game) {
         chapter: "第四章",
         title: "理由の地図",
         body: `
-          <p>あなたが提案した制度は、五年の試行を経た。${state.flags.ev12_done ? "モザイクの一年評価も、議題に加わる。" : ""}${state.flags.ev11_done ? " 共同親の試行も、議題に加わる。" : ""}${state.flags.ev10_done ? " 非記録謝罪の試行も、議題に加わる。" : ""}${state.flags.ev09_done ? " 競技共同体の試行も、議題に加わる。" : ""}${state.flags.ev02_done ? " 匿名共同体の試行も、議題に加わる。" : ""}支持者と反対者が、公共議会に集う。</p>
+          <p>あなたが提案した制度は、五年の試行を経た。${state.flags.ev12_done ? "モザイクの一年評価も、議題に加わる。" : ""}${state.flags.ev13_done ? " 老化共同体の試行も、議題に加わる。" : ""}${state.flags.ev11_done ? " 共同親の試行も、議題に加わる。" : ""}${state.flags.ev10_done ? " 非記録謝罪の試行も、議題に加わる。" : ""}${state.flags.ev09_done ? " 競技共同体の試行も、議題に加わる。" : ""}${state.flags.ev02_done ? " 匿名共同体の試行も、議題に加わる。" : ""}支持者と反対者が、公共議会に集う。</p>
           <p>ここでの勝利条件は全会一致ではない。<strong>安定した異議</strong>——反対者が賛成しなくても、負担が理解され、退出権が残り、意見が記録されれば、決定は正当になる。</p>
         `,
         period: 4,
