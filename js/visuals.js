@@ -146,6 +146,11 @@ export function getSceneArtHtml(artId = "title") {
 export function renderSceneHero(artId = "title") {
   const el = document.getElementById("scene-hero");
   if (!el) return;
+  if (!artId) {
+    el.innerHTML = "";
+    el.dataset.art = "";
+    return;
+  }
   el.innerHTML = getSceneArtHtml(artId);
   el.dataset.art = artId;
 }

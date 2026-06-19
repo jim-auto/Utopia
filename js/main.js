@@ -18,6 +18,7 @@ import { getSceneHandlers, renderEpilogue } from "./scenes.js";
 import { miniPortrait } from "./portraits.js";
 import { initAmbience, setMood } from "./visuals.js";
 import { initAudio, bindAudioToggle } from "./audio.js";
+import { initWorld3d } from "./world3d.js";
 import { simulateFiveYears } from "./covenant-sim.js";
 import {
   buildClauseForm as buildEvent04Form,
@@ -94,6 +95,7 @@ export function createGame() {
       art: opts.art,
       titleScreen: opts.titleScreen,
       speaker: opts.speaker,
+      location: opts.location || state.location,
     });
   }
 
@@ -575,6 +577,7 @@ export function createGame() {
 
 export function startGame() {
   initAmbience();
+  initWorld3d();
   initAudio();
   bindAudioToggle();
   setMood("cosmos");

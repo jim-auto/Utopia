@@ -9,6 +9,12 @@ import {
 } from "./visuals.js";
 import { renderSpeakerStrip } from "./portraits.js";
 import { setAudioMood, playClick } from "./audio.js";
+import {
+  showWorld3d,
+  hideWorld3d,
+  setExplorationEnabled,
+  setWorldFromScene,
+} from "./world3d.js";
 
 function applyMood(moodId) {
   if (!moodId) return;
@@ -71,6 +77,7 @@ export function renderSidebar(state) {
     const events = [];
     if (state.flags.ev04_done) events.push("忘れられる権利");
     if (state.flags.ev05_done) events.push("百年庭園");
+    if (state.flags.ev06_done) events.push("感覚の共有期間");
     if (state.flags.ev12_done) events.push("モザイク承認投票");
     if (state.flags.cov_childChoice || state.flags.cov_exitImmediate) events.push("出発憲章試行");
     eventsEl.innerHTML =
@@ -78,10 +85,19 @@ export function renderSidebar(state) {
   }
 }
 
-export function renderScene({ chapter, title, body, choices = [], mood, art, titleScreen = false, speaker }) {
+export function renderScene({ chapter, title, body, choices = [], mood, art, titleScreen = false, speaker, location }) {
   showNarrative();
   if (mood) applyMood(mood);
-  renderSceneHero(art || "title");
+  if (titleScreen) {
+    hideWorld3d();
+    setExplorationEnabled(false);
+    renderSceneHero(art || "title");
+  } else {
+    showWorld3d();
+    setWorldFromScene({ art, mood, location, speaker });
+    setExplorationEnabled(true);
+    renderSceneHero(null);
+  }
   renderSpeakerStrip(titleScreen ? null : speaker);
 
   const panel = narrativePanel();
@@ -122,9 +138,12 @@ export function renderSystem({ title, desc, contentHtml, actions = [], systemId 
   showSystem();
   const meta = getSystemMeta(systemId);
   applyMood(meta.mood);
+  showWorld3d();
+  setExplorationEnabled(false);
+  setWorldFromScene({ art: meta.art, mood: meta.mood });
 
   const hero = document.getElementById("system-hero");
-  if (hero) hero.innerHTML = getSceneArtHtml(meta.art);
+  if (hero) hero.innerHTML = "";
 
   const badge = document.getElementById("system-badge");
   if (badge) badge.textContent = meta.badge;
