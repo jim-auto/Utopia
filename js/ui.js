@@ -25,6 +25,44 @@ function applyMood(moodId) {
 const narrativePanel = () => document.getElementById("narrative-panel");
 const systemPanel = () => document.getElementById("system-panel");
 
+function bindPanelFocusControls() {
+  const toggles = document.querySelectorAll(".btn-panel-focus");
+  const tab = document.getElementById("panel-focus-tab");
+  if (tab && !tab.dataset.bound) {
+    tab.dataset.bound = "1";
+    tab.addEventListener("click", () => setDialogueCollapsed(false));
+  }
+  toggles.forEach((btn) => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", () => {
+      const collapsed = !document.body.classList.contains("dialogue-collapsed");
+      setDialogueCollapsed(collapsed);
+    });
+  });
+}
+
+function setDialogueCollapsed(collapsed) {
+  document.body.classList.toggle("dialogue-collapsed", collapsed);
+  const tab = document.getElementById("panel-focus-tab");
+  if (tab) tab.hidden = !document.body.classList.contains("mode-3d") || !collapsed;
+  document.querySelectorAll(".btn-panel-focus").forEach((btn) => {
+    btn.setAttribute("aria-pressed", collapsed ? "true" : "false");
+    btn.textContent = collapsed ? "▶ 会話" : "◀ 3D";
+  });
+}
+
+function syncPanelFocusUi(titleScreen) {
+  bindPanelFocusControls();
+  const tab = document.getElementById("panel-focus-tab");
+  if (titleScreen || !document.body.classList.contains("mode-3d")) {
+    setDialogueCollapsed(false);
+    if (tab) tab.hidden = true;
+    return;
+  }
+  if (tab) tab.hidden = !document.body.classList.contains("dialogue-collapsed");
+}
+
 export function showNarrative() {
   narrativePanel().hidden = false;
   systemPanel().hidden = true;
@@ -133,6 +171,7 @@ export function renderScene({ chapter, title, body, choices = [], mood, art, tit
   panel.style.animation = "none";
   void panel.offsetWidth;
   panel.style.animation = "";
+  syncPanelFocusUi(titleScreen);
 }
 
 export function renderSystem({ title, desc, contentHtml, actions = [], systemId = "presence" }) {
@@ -171,6 +210,7 @@ export function renderSystem({ title, desc, contentHtml, actions = [], systemId 
   panel.style.animation = "none";
   void panel.offsetWidth;
   panel.style.animation = "";
+  syncPanelFocusUi(false);
 }
 
 export function showRestart(onRestart) {

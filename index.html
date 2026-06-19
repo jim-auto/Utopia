@@ -67,6 +67,10 @@
           <div class="scene-hero-fade"></div>
         </div>
         <div class="panel-inner">
+          <div class="panel-dock-bar">
+            <span class="panel-dock-label">物語</span>
+            <button type="button" class="btn-panel-focus" id="btn-panel-focus" aria-pressed="false" title="3D表示を広げる">◀ 3D</button>
+          </div>
           <div class="speaker-strip" id="speaker-strip" hidden></div>
           <p class="chapter-tag" id="chapter-tag"></p>
           <h1 class="scene-title" id="scene-title"></h1>
@@ -82,6 +86,10 @@
           <div class="scene-hero-fade"></div>
         </div>
         <div class="panel-inner">
+          <div class="panel-dock-bar">
+            <span class="panel-dock-label">システム</span>
+            <button type="button" class="btn-panel-focus btn-panel-focus-system" aria-pressed="false" title="3D表示を広げる">◀ 3D</button>
+          </div>
           <div class="system-header">
             <h2 id="system-title"></h2>
             <p id="system-desc"></p>
@@ -107,6 +115,8 @@
         <ul id="events-list"></ul>
       </details>
     </aside>
+
+    <button type="button" class="panel-focus-tab" id="panel-focus-tab" hidden aria-label="会話パネルを開く">▶ 会話</button>
 
     <footer class="footer" id="footer">
       <div class="footer-left">

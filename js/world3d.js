@@ -1173,6 +1173,7 @@ export function initWorld3d() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.autoUpdate = true;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -1195,7 +1196,7 @@ export function initWorld3d() {
   const sun = new THREE.DirectionalLight("#fff8f0", 0.9);
   sun.position.set(10, 18, 8);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.camera.near = 1;
   sun.shadow.camera.far = 40;
   sun.shadow.camera.left = -18;
@@ -1276,12 +1277,15 @@ export function hideWorld3d() {
   visible = false;
   explorationEnabled = false;
   document.body.classList.remove("mode-3d");
+  document.body.classList.remove("dialogue-collapsed");
   const wrap = document.getElementById("world3d-wrap");
   const hint = document.getElementById("world3d-hint");
   const stick = document.getElementById("touch-stick");
+  const tab = document.getElementById("panel-focus-tab");
   if (wrap) wrap.hidden = true;
   if (hint) hint.hidden = true;
   if (stick) stick.hidden = true;
+  if (tab) tab.hidden = true;
 }
 
 export function setExplorationEnabled(enabled) {
