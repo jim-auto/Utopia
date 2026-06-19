@@ -36,6 +36,8 @@ import {
   canUnlockMosaicEnding,
 } from "./covenant-event-12.js";
 
+const scenes = {};
+
 function register(name, fn) {
   scenes[name] = fn;
 }
