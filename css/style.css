@@ -1628,6 +1628,124 @@ body.mode-3d .title-screen .scene-hero {
   font-size: 0.82rem;
 }
 
+/* SYS-07 — 共同親の輪 */
+.coparent-weave {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.coparent-lead {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.coparent-ring {
+  position: relative;
+  height: 140px;
+  margin: 0.5rem 0;
+}
+
+.coparent-ring-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--mood-accent);
+  opacity: 0.7;
+}
+
+.coparent-slot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 72px;
+  padding: 0.45rem 0.35rem;
+  text-align: center;
+  border: 1px solid color-mix(in srgb, var(--mood-accent) 35%, transparent);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  transform:
+    translate(-50%, -50%)
+    rotate(calc(var(--i) * 120deg))
+    translateY(-52px)
+    rotate(calc(var(--i) * -120deg));
+}
+
+.coparent-slot-name {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.coparent-slot-count {
+  display: block;
+  font-family: ui-monospace, monospace;
+  font-size: 1rem;
+  color: var(--accent-gold);
+}
+
+.coparent-roles {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.coparent-role-btn {
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--bg-panel-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  color: inherit;
+  cursor: pointer;
+}
+
+.coparent-role.active .coparent-role-btn {
+  border-color: var(--mood-accent);
+  background: color-mix(in srgb, var(--mood-accent) 8%, transparent);
+}
+
+.coparent-role-label {
+  display: block;
+  color: var(--mood-accent);
+  font-family: var(--font-serif);
+}
+
+.coparent-role-desc {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.coparent-assigned {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--accent-gold);
+  margin-top: 0.35rem;
+}
+
+.coparent-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.coparent-slots-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.coparent-skip-btn {
+  align-self: flex-start;
+  font-size: 0.82rem;
+}
+
 .tag-row {
   display: flex;
   flex-wrap: wrap;

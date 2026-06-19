@@ -118,6 +118,7 @@ export function renderSidebar(state) {
     if (state.flags.ev06_done) events.push("感覚の共有期間");
     if (state.flags.ev07_done) events.push("深層の命名");
     if (state.flags.ev08_done) events.push("新身体の試着");
+    if (state.flags.ev11_done) events.push("共同親");
     if (state.flags.ev12_done) events.push("モザイク承認投票");
     if (state.flags.atelier_improv_done) events.push("アトリエ即興");
     if (state.flags.cov_childChoice || state.flags.cov_exitImmediate) events.push("出発憲章試行");

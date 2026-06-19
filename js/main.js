@@ -46,6 +46,11 @@ import {
   getDeliberationReason as getEvent08Reason,
 } from "./covenant-event-08.js";
 import {
+  buildClauseForm as buildEvent11Form,
+  simulateEvent11,
+  getDeliberationReason as getEvent11Reason,
+} from "./covenant-event-11.js";
+import {
   buildClauseForm as buildEvent12Form,
   simulateEvent12,
   getDeliberationReasons as getEvent12Reasons,
@@ -53,6 +58,7 @@ import {
 } from "./covenant-event-12.js";
 import { mountAtelierImprov, getImprovDeliberationReason } from "./atelier-improv.js";
 import { mountForgeTryon } from "./forge-tryon.js";
+import { mountCoParentWeave } from "./co-parent-weave.js";
 
 const scenes = {};
 
@@ -77,9 +83,11 @@ export function createGame() {
     renderEvent06Covenant,
     renderEvent07Covenant,
     renderEvent08Covenant,
+    renderEvent11Covenant,
     renderEvent12Covenant,
     renderAtelierImprov,
     renderForgeTryon,
+    renderCoParentWeave,
     renderDeliberation,
     renderEndingPicker,
     renderEpilogue: () => renderEpilogue(game),
@@ -394,7 +402,7 @@ export function createGame() {
     renderSystem({
       title: "SYS-07 — 身体試着",
       desc: "ジェネシス・フォージの身体的実践。視覚・触覚・平衡に5点配分——14日で元に戻れる。",
-      systemId: "embodied",
+      systemId: "forgeBody",
       contentHtml: `<div id="forge-tryon-root"></div>`,
       actions: [],
     });
@@ -412,6 +420,61 @@ export function createGame() {
         go("event08_tryon_result");
       },
       onSkip: () => renderEvent08Covenant(),
+    });
+  }
+
+  function renderEvent11Covenant() {
+    const selected = new Set(["multiParent", "childExitFamily", "renewContract"]);
+
+    renderSystem({
+      title: "コヴナント事件 #11 — 共同親",
+      desc: "家族の再定義 × 子どもの退出 × 血縁の拒否。選んだ関係だけが残る。",
+      systemId: "covenant",
+      contentHtml: `<div id="event11-form">${buildEvent11Form(selected)}</div>`,
+      actions: [
+        {
+          label: "ガーデンで試行を開始する（5年後に再訪）",
+          action: () => {
+            document.querySelectorAll("#event11-form input").forEach((input) => {
+              if (input.checked) state.flags[`ev11_${input.dataset.key}`] = true;
+            });
+            state.flags.ev11_done = true;
+            state.event11Sim = simulateEvent11(state);
+            if (state.flags.ev11_childExitFamily) bumpTrust(state, "children", 2);
+            if (state.flags.ev11_noBloodPriority) bumpTrust(state, "sen", 1);
+            go("event11_revisit");
+          },
+        },
+      ],
+    });
+
+    document.getElementById("system-content").addEventListener("change", (e) => {
+      if (e.target.type === "checkbox") {
+        const key = e.target.dataset.key;
+        if (e.target.checked) selected.add(key);
+        else selected.delete(key);
+      }
+    });
+  }
+
+  function renderCoParentWeave() {
+    renderSystem({
+      title: "SYS-07 — 親の輪",
+      desc: "コモン・ガーデンの関係的実践。養育・時間・境界・記録を、血縁ではなく選んだ共同親へ配分する。",
+      systemId: "coParent",
+      contentHtml: `<div id="coparent-root"></div>`,
+      actions: [],
+    });
+
+    mountCoParentWeave(document.getElementById("coparent-root"), {
+      onComplete: (result) => {
+        state.coParentWeaveResult = result;
+        state.flags.coparent_weave_done = true;
+        if (result.profile === "shared") bumpTrust(state, "children", 2);
+        else if (result.profile === "focused") bumpTrust(state, "sen", 1);
+        go("event11_weave_result");
+      },
+      onSkip: () => renderEvent11Covenant(),
     });
   }
 
@@ -611,6 +674,10 @@ export function createGame() {
       reasons.push(getEvent08Reason());
     }
 
+    if (state.flags.ev11_done) {
+      reasons.push(getEvent11Reason());
+    }
+
     if (state.flags.ev12_done) {
       reasons.push(...getEvent12Reasons());
     }
@@ -647,6 +714,7 @@ export function createGame() {
           ${state.flags.ev06_done ? `<span class="tag ${picked.has("io") ? "active" : ""}">切れる共有</span>` : ""}
           ${state.flags.ev07_done ? `<span class="tag ${picked.has("nagi") ? "active" : ""}">未命名の驚異</span>` : ""}
           ${state.flags.ev08_done ? `<span class="tag ${picked.has("child") ? "active" : ""}">試着と同意</span>` : ""}
+          ${state.flags.ev11_done ? `<span class="tag ${picked.has("childGarden") ? "active" : ""}">選べる家族</span>` : ""}
           ${state.flags.ev12_done ? `<span class="tag ${picked.has("kaede") ? "active" : ""}">命令しない神</span>` : ""}
           ${state.flags.atelier_improv_done ? `<span class="tag ${picked.has("soli") ? "active" : ""}">一度きりの即興</span>` : ""}
         </div>

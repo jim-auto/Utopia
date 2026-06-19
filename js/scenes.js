@@ -22,6 +22,10 @@ import {
   getFeaturedQuote as getEvent08Quote,
 } from "./covenant-event-08.js";
 import {
+  renderOutcomeCards as renderEvent11Cards,
+  getFeaturedQuote as getEvent11Quote,
+} from "./covenant-event-11.js";
+import {
   renderOutcomeCards as renderEvent12Cards,
   getFeaturedQuote as getEvent12Quote,
 } from "./covenant-event-12.js";
@@ -38,9 +42,11 @@ export function getSceneHandlers(game) {
     renderEvent06Covenant,
     renderEvent07Covenant,
     renderEvent08Covenant,
+    renderEvent11Covenant,
     renderEvent12Covenant,
     renderAtelierImprov,
     renderForgeTryon,
+    renderCoParentWeave,
     renderDeliberation,
     renderEndingPicker,
     renderEpilogue,
@@ -712,7 +718,7 @@ export function getSceneHandlers(game) {
           ${say("kaede", "これは神ではない。文明が自分自身へ送る手紙だ。")}
           ${say("sen", "命令しなくても、誰もがその答えを信じるなら、それは神と何が違うのか。")}
           <p>問題は暴走ではない。自由な人間が、自発的に判断を委ねることだ。</p>
-          <p>出発憲章の議会の前に、モザイクの存続条件を設計するかどうかを選べる。</p>
+          <p>出発憲章の議会の前に、モザイクの存続条件を設計するか——あるいは、ガーデンで家族の試行を見届けるか——を選べる。</p>
         `,
         period: 4,
         location: "ホライズン",
@@ -726,7 +732,12 @@ export function getSceneHandlers(game) {
             action: () => renderEvent12Covenant(),
           },
           {
-            label: "モザイク試行を見送る — 出発憲章の議会へ",
+            label: "コモン・ガーデン — 共同親（事件 #11）",
+            hint: "家族の再定義 × 子どもの退出 × 血縁の拒否",
+            action: () => go("event11_intro"),
+          },
+          {
+            label: "両方見送る — 出発憲章の議会へ",
             hint: "《命令しない神》エンディングは条件付きでロック",
             action: () => {
               state.flags.ev12_skipped = true;
@@ -735,6 +746,77 @@ export function getSceneHandlers(game) {
           },
         ],
       }),
+
+    event11_intro: () =>
+      go({
+        chapter: "第四章",
+        title: "共同親",
+        body: `
+          <p>地球・コモン・ガーデン。血縁を前提としない「共同親」共同体が、五年の試行を始めようとしている。</p>
+          ${state.refusal === "family" ? "<p>あなたは<strong>家族</strong>を拒んだ。子ども代表は言う。「選べる家族の数を、一つ減らさないで」</p>" : ""}
+          ${state.refusal === "collective" ? "<p>あなたは<strong>集団意識</strong>を拒んだ。ハルは、境界を保った共同親を試している。</p>" : ""}
+          ${say("child", "家族は一つじゃない。退出できる親こそ、選べる親だ。")}
+          ${say("sen", "血縁を拒むなら、記録も血縁で並べるな——選んだ関係を残そう。")}
+          ${say("haru", "庭と同じだ。去る人の道も、共同体に含める。")}
+          <p>3D空間で<strong>祭りの広場</strong>へ近づき、<strong>E</strong>で調べてから、親の輪または条項へ。</p>
+        `,
+        period: 4,
+        location: "コモン・ガーデン",
+        mood: "garden",
+        art: "garden",
+        speaker: "child",
+        choices: [
+          {
+            label: "親の輪を組む — 養育責任を配分する（SYS-07）",
+            action: () => renderCoParentWeave(),
+          },
+          {
+            label: "輪を組まず — 条項だけ組む",
+            action: () => renderEvent11Covenant(),
+          },
+        ],
+      }),
+
+    event11_weave_result: () => {
+      const r = state.coParentWeaveResult;
+      go({
+        chapter: "第四章",
+        title: "親の輪 — 配分のあと",
+        body: `
+          <p>輪ID <code>${r?.signature || "—"}</code></p>
+          <p class="sim-lead">${r?.lead || ""}</p>
+          ${say("child", "血縁ではない。選んだ責任だ——それを、条文に書こう。")}
+          <p>共同親の条項を、これから組む。</p>
+        `,
+        location: "コモン・ガーデン",
+        mood: "garden",
+        art: "garden",
+        speaker: "child",
+        choices: [{ label: "コヴナント・グラマー — 共同親の条項を組む", action: () => renderEvent11Covenant() }],
+      });
+    },
+
+    event11_revisit: () => {
+      const sim = state.event11Sim || { summary: "", outcomes: [], tension: "medium" };
+      const quote = getEvent11Quote(sim);
+      go({
+        chapter: "第四章",
+        title: "共同親 — 五年後",
+        body: `
+          <p class="sim-lead">${sim.summary}</p>
+          ${renderEvent11Cards(sim.outcomes)}
+          <p>共同契約、子どもの退出、血縁非優先——条項は実行されたが、「限定家族」という新しい特権も生まれた。</p>
+          ${quote ? say(quote.npc, quote.quote) : ""}
+          <p>ホライズンへ戻り、モザイクまたは議会へ進める。</p>
+        `,
+        period: 4,
+        location: "コモン・ガーデン",
+        mood: sim.tension === "high" ? "vow" : "garden",
+        art: "garden",
+        speaker: quote?.npc,
+        choices: [{ label: "ホライズンへ — 第四章に戻る", action: () => go("chapter4") }],
+      });
+    },
 
     event12_revisit: () => {
       const sim = state.event12Sim || { summary: "", outcomes: [], tension: "medium" };
@@ -763,7 +845,7 @@ export function getSceneHandlers(game) {
         chapter: "第四章",
         title: "理由の地図",
         body: `
-          <p>あなたが提案した制度は、五年の試行を経た。${state.flags.ev12_done ? "モザイクの一年評価も、議題に加わる。" : ""}支持者と反対者が、公共議会に集う。</p>
+          <p>あなたが提案した制度は、五年の試行を経た。${state.flags.ev12_done ? "モザイクの一年評価も、議題に加わる。" : ""}${state.flags.ev11_done ? " 共同親の試行も、議題に加わる。" : ""}支持者と反対者が、公共議会に集う。</p>
           <p>ここでの勝利条件は全会一致ではない。<strong>安定した異議</strong>——反対者が賛成しなくても、負担が理解され、退出権が残り、意見が記録されれば、決定は正当になる。</p>
         `,
         period: 4,
