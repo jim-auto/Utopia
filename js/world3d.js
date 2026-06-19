@@ -32,7 +32,9 @@ let elapsed = 0;
 
 const keys = new Set();
 const pointer = { down: false, x: 0, y: 0, id: null };
-const cameraOrbit = { yaw: 0, pitch: 0.38, distance: 8 };
+let cameraIntro = 0;
+const CAMERA_INTRO_FROM = 13.5;
+const CAMERA_INTRO_TO = 8;
 const playerVel = new THREE.Vector3();
 const tmpVec = new THREE.Vector3();
 
@@ -263,6 +265,11 @@ function loadWorld(worldId, force = false) {
   player.position.set(0, 0, 7);
   playerVel.set(0, 0, 0);
   cameraOrbit.yaw = 0;
+  if (force) {
+    cameraIntro = 1;
+    cameraOrbit.distance = CAMERA_INTRO_FROM;
+    cameraOrbit.pitch = 0.28;
+  }
   updatePlayerAccent();
 }
 
@@ -579,6 +586,13 @@ function updatePlayer(dt) {
 }
 
 function updateCamera(dt) {
+  if (cameraIntro > 0) {
+    cameraIntro = Math.max(0, cameraIntro - dt * 1.15);
+    const blend = 1 - cameraIntro;
+    cameraOrbit.distance = THREE.MathUtils.lerp(CAMERA_INTRO_FROM, CAMERA_INTRO_TO, blend);
+    cameraOrbit.pitch = THREE.MathUtils.lerp(0.26, 0.38, blend);
+  }
+
   const targetY = firstPerson ? 1.68 : 1.52;
   const target = tmpVec.set(player.position.x, targetY, player.position.z);
   if (player) player.visible = !firstPerson;
@@ -690,7 +704,7 @@ export function initWorld3d() {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.shadowMap.autoUpdate = true;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 1.18;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   wrap.appendChild(renderer.domElement);
 
@@ -748,9 +762,9 @@ export function initWorld3d() {
   composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.45,
-    0.35,
-    0.85
+    0.52,
+    0.38,
+    0.78
   );
   composer.addPass(bloom);
 
@@ -759,7 +773,10 @@ export function initWorld3d() {
   bindTouchStick();
   const interactBtn = document.getElementById("btn-interact");
   if (interactBtn) interactBtn.addEventListener("click", tryInteract);
-  loadWorld("garden", true);
+  loadWorld("horizon", true);
+  cameraIntro = 1;
+  cameraOrbit.distance = CAMERA_INTRO_FROM;
+  cameraOrbit.pitch = 0.26;
 
   window.addEventListener("resize", onResize);
 }
@@ -793,6 +810,7 @@ export function hideWorld3d() {
   visible = false;
   explorationEnabled = false;
   document.body.classList.remove("mode-3d");
+  document.body.classList.remove("title-backdrop");
   document.body.classList.remove("dialogue-collapsed");
   const wrap = document.getElementById("world3d-wrap");
   const hint = document.getElementById("world3d-hint");

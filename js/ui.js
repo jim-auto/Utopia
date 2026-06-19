@@ -7,6 +7,7 @@ import {
   moodFromLocation,
   getSystemMeta,
 } from "./visuals.js";
+import { pulseSceneAtmosphere, flashSceneTitle } from "./atmosphere.js";
 import { renderSpeakerStrip } from "./portraits.js";
 import { setAudioMood, playClick } from "./audio.js";
 import {
@@ -133,16 +134,30 @@ export function renderSidebar(state) {
 
 export function renderScene({ chapter, title, body, choices = [], mood, art, titleScreen = false, speaker, location }) {
   showNarrative();
+  const resolvedMood = mood || (location ? moodFromLocation(location) : "cosmos");
   if (mood) applyMood(mood);
+  else if (location) applyMood(moodFromLocation(location));
+
+  document.body.classList.toggle("title-backdrop", titleScreen);
+
   if (titleScreen) {
-    hideWorld3d();
+    showWorld3d();
     setExplorationEnabled(false);
+    setWorldFromScene({ art: "gate", mood: resolvedMood, location: location || "ホライズン — 地平門" });
     renderSceneHero(art || "title");
+    pulseSceneAtmosphere({
+      mood: resolvedMood,
+      location: location || "太陽系 · 25世紀",
+      title,
+      art: art || "title",
+      intense: true,
+    });
   } else {
     showWorld3d();
-    setWorldFromScene({ art, mood, location, speaker });
+    setWorldFromScene({ art, mood: resolvedMood, location, speaker });
     setExplorationEnabled(true);
     renderSceneHero(null);
+    pulseSceneAtmosphere({ mood: resolvedMood, location, title, art });
   }
   renderSpeakerStrip(titleScreen ? null : speaker);
 
@@ -152,6 +167,7 @@ export function renderScene({ chapter, title, body, choices = [], mood, art, tit
   document.getElementById("chapter-tag").textContent = chapter || "";
   document.getElementById("scene-title").textContent = title || "";
   document.getElementById("scene-body").innerHTML = body || "";
+  flashSceneTitle();
 
   const container = document.getElementById("scene-choices");
   container.innerHTML = "";
@@ -190,6 +206,8 @@ export function renderSystem({ title, desc, contentHtml, actions = [], systemId 
   setWorldFromScene({ art: meta.art, mood: meta.mood });
 
   renderSystemHero(meta.art);
+  pulseSceneAtmosphere({ mood: meta.mood, location: meta.badge, title, art: meta.art });
+  flashSceneTitle();
 
   const badge = document.getElementById("system-badge");
   if (badge) badge.textContent = meta.badge;

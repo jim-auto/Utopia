@@ -88,6 +88,7 @@ export function getSceneHandlers(game) {
         `,
         mood: "cosmos",
         art: "title",
+        location: "ホライズン — 地平門",
         titleScreen: true,
         choices: [
           {

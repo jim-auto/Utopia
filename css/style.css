@@ -74,6 +74,30 @@ body[data-mood="finale"]::after {
   z-index: 1;
 }
 
+#world3d-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 100% 80% at 50% 100%, color-mix(in srgb, var(--mood-accent) 12%, transparent), transparent 55%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.28), transparent 22%, transparent 72%, rgba(0, 0, 0, 0.42));
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  transition: opacity 0.35s ease;
+}
+
+body.mode-3d #world3d-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  box-shadow:
+    inset 0 0 120px rgba(0, 0, 0, 0.55),
+    inset 0 28px 80px rgba(0, 0, 0, 0.35);
+}
+
 #world3d-wrap canvas {
   display: block;
   width: 100%;
@@ -240,7 +264,8 @@ body[data-mood="finale"]::after {
 }
 
 body.mode-3d #ambient-canvas,
-body.mode-3d .ambient-gradient { opacity: 0.2; }
+body.mode-3d .ambient-gradient,
+body.mode-3d .ambient-rays { opacity: 0.42; }
 
 body.mode-3d #app {
   display: block;
@@ -270,12 +295,13 @@ body.mode-3d .panel {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: rgba(8, 12, 20, 0.52);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(8, 12, 20, 0.58);
+  border-color: color-mix(in srgb, var(--mood-accent) 22%, rgba(255, 255, 255, 0.1));
   box-shadow:
     -12px 0 40px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    -4px 0 32px color-mix(in srgb, var(--mood-glow) 25%, transparent);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 body.mode-3d .panel .panel-inner {
@@ -565,14 +591,157 @@ body.mode-3d .title-screen .scene-hero {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 90% 60% at 50% -5%, var(--mood-glow), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 100% 100%, rgba(232, 192, 104, 0.06), transparent),
-    radial-gradient(ellipse 40% 30% at 0% 80%, var(--mood-glow), transparent 50%),
-    linear-gradient(165deg, var(--grad-a) 0%, var(--grad-b) 45%, var(--grad-c) 100%);
-  transition: background 1.4s ease, opacity 0.8s ease;
+    radial-gradient(ellipse 100% 55% at 50% -8%, var(--mood-glow), transparent 58%),
+    radial-gradient(ellipse 60% 45% at 100% 100%, rgba(232, 192, 104, 0.08), transparent),
+    radial-gradient(ellipse 50% 40% at 0% 85%, var(--mood-glow), transparent 52%),
+    linear-gradient(165deg, var(--grad-a) 0%, var(--grad-b) 42%, var(--grad-c) 100%);
+  transition: background 0.45s ease, opacity 0.35s ease;
   pointer-events: none;
   z-index: 0;
-  animation: ambientBreath 12s ease-in-out infinite;
+  animation: ambientBreath 10s ease-in-out infinite;
+}
+
+.ambient-rays {
+  position: fixed;
+  inset: -20% 0 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.55;
+  background:
+    conic-gradient(from 210deg at 50% -10%, transparent 0deg, color-mix(in srgb, var(--mood-accent) 14%, transparent) 24deg, transparent 48deg, color-mix(in srgb, var(--mood-accent) 8%, transparent) 72deg, transparent 120deg);
+  filter: blur(28px);
+  animation: rayDrift 18s ease-in-out infinite;
+  transition: opacity 0.35s ease;
+}
+
+@keyframes rayDrift {
+  0%, 100% { transform: translateX(0) scale(1); opacity: 0.45; }
+  50% { transform: translateX(2%) scale(1.03); opacity: 0.65; }
+}
+
+.atmosphere-wash {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 40%, var(--mood-glow), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--mood-accent) 22%, transparent), transparent 45%, rgba(0, 0, 0, 0.35));
+  transition: opacity 0.2s ease;
+}
+
+body.atmosphere-pulse .atmosphere-wash {
+  animation: atmosphereFlash 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes atmosphereFlash {
+  0% { opacity: 0; }
+  12% { opacity: 0.72; }
+  100% { opacity: 0; }
+}
+
+.atmosphere-card {
+  position: fixed;
+  inset: 0;
+  z-index: 7;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  padding: 2rem;
+}
+
+.atmosphere-card-inner {
+  text-align: center;
+  animation: atmosphereCardIn 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.atmosphere-card-intense .atmosphere-card-inner {
+  animation-duration: 0.95s;
+}
+
+@keyframes atmosphereCardIn {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+    filter: blur(8px);
+  }
+  18% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  72% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(1.02);
+    filter: blur(4px);
+  }
+}
+
+.atmosphere-card-art {
+  width: min(280px, 72vw);
+  margin: 0 auto 0.75rem;
+  filter: drop-shadow(0 16px 40px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 32px var(--mood-glow));
+}
+
+.atmosphere-card-art .scene-svg-traditional {
+  width: 100%;
+  height: auto;
+}
+
+.atmosphere-card-location {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--mood-accent);
+  text-shadow: 0 0 24px var(--mood-glow);
+}
+
+.atmosphere-card-title {
+  margin: 0.45rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  font-weight: 600;
+  color: var(--text-primary);
+  text-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
+}
+
+.scene-title.scene-enter,
+.chapter-tag.scene-enter {
+  animation: sceneEnter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes sceneEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+body.atmosphere-pulse .panel {
+  animation: panelFlash 0.7s ease;
+}
+
+@keyframes panelFlash {
+  0% { box-shadow: var(--shadow); }
+  15% {
+    box-shadow:
+      var(--shadow),
+      0 0 48px color-mix(in srgb, var(--mood-glow) 55%, transparent);
+  }
+  100% { box-shadow: var(--shadow); }
 }
 
 @keyframes ambientBreath {
@@ -583,7 +752,7 @@ body.mode-3d .title-screen .scene-hero {
 .grain {
   position: fixed;
   inset: 0;
-  opacity: 0.055;
+  opacity: 0.075;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   pointer-events: none;
@@ -2143,6 +2312,61 @@ body.mode-3d .title-screen .scene-hero {
   color: var(--accent-gold);
   background: rgba(232, 192, 104, 0.08);
   box-shadow: 0 0 16px rgba(232, 192, 104, 0.12);
+}
+
+.title-screen .scene-hero-wrap {
+  height: clamp(220px, 38vh, 320px);
+}
+
+.title-screen .scene-hero {
+  animation: titleHeroIn 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes titleHeroIn {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: none;
+  }
+}
+
+body.title-backdrop.mode-3d .title-screen.panel {
+  left: 50%;
+  right: auto;
+  top: 10vh;
+  bottom: auto;
+  width: min(460px, 92vw);
+  max-height: 80vh;
+  transform: translateX(-50%);
+  background: rgba(8, 12, 20, 0.68);
+  border-color: color-mix(in srgb, var(--mood-accent) 28%, rgba(255, 255, 255, 0.12));
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.55),
+    0 0 60px color-mix(in srgb, var(--mood-glow) 35%, transparent);
+}
+
+body.title-backdrop.mode-3d.dialogue-collapsed .title-screen.panel {
+  transform: translateX(-50%);
+}
+
+body.title-backdrop.mode-3d .title-screen {
+  background: transparent;
+}
+
+body.title-backdrop.mode-3d .title-screen .scene-hero-wrap {
+  background: linear-gradient(180deg, rgba(8, 12, 20, 0.35), rgba(8, 12, 20, 0.72));
+  backdrop-filter: blur(6px);
+}
+
+body.title-backdrop.mode-3d .title-screen .scene-hero {
+  background:
+    radial-gradient(ellipse 80% 90% at 50% 100%, var(--mood-glow), transparent 60%),
+    rgba(0, 0, 0, 0.15);
 }
 
 .title-screen .scene-title {

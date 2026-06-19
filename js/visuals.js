@@ -3,8 +3,8 @@ import { getTraditionalArt } from "./traditional-art.js";
 const MOODS = {
   cosmos: {
     accent: "#6ec8e8",
-    glow: "rgba(110, 200, 232, 0.35)",
-    gradient: ["#050810", "#0a1628", "#122a45"],
+    glow: "rgba(110, 200, 232, 0.42)",
+    gradient: ["#030610", "#081428", "#0e2848"],
   },
   dawn: {
     accent: "#e8b86d",
@@ -13,8 +13,8 @@ const MOODS = {
   },
   garden: {
     accent: "#7ecf9a",
-    glow: "rgba(126, 207, 154, 0.32)",
-    gradient: ["#060c0a", "#0e1a14", "#142818"],
+    glow: "rgba(126, 207, 154, 0.38)",
+    gradient: ["#040a08", "#0c1810", "#122818"],
   },
   mars: {
     accent: "#e8926a",
@@ -79,18 +79,18 @@ const SYSTEM_META = {
 };
 
 const MOTE_PRESETS = {
-  cosmos: { count: 0, drift: 0.0002 },
-  garden: { count: 18, drift: 0.00012 },
-  mars: { count: 10, drift: 0.00015 },
-  memory: { count: 14, drift: 0.00008 },
-  vow: { count: 8, drift: 0.0001 },
-  law: { count: 6, drift: 0.00008 },
-  council: { count: 12, drift: 0.0001 },
-  finale: { count: 16, drift: 0.00014 },
-  chorus: { count: 20, drift: 0.00011 },
-  abyss: { count: 14, drift: 0.00018 },
-  forge: { count: 12, drift: 0.00014 },
-  dawn: { count: 10, drift: 0.0001 },
+  cosmos: { count: 28, drift: 0.00028 },
+  garden: { count: 32, drift: 0.00018 },
+  mars: { count: 22, drift: 0.00022 },
+  memory: { count: 26, drift: 0.00012 },
+  vow: { count: 20, drift: 0.00016 },
+  law: { count: 18, drift: 0.00012 },
+  council: { count: 24, drift: 0.00016 },
+  finale: { count: 30, drift: 0.0002 },
+  chorus: { count: 34, drift: 0.00015 },
+  abyss: { count: 26, drift: 0.00024 },
+  forge: { count: 24, drift: 0.00018 },
+  dawn: { count: 22, drift: 0.00014 },
 };
 
 let canvas, ctx, stars = [], motes = [], rafId = null;
@@ -113,13 +113,13 @@ export function initAmbience() {
   if (!canvas) return;
   ctx = canvas.getContext("2d");
   resizeCanvas();
-  stars = Array.from({ length: 160 }, () => ({
+  stars = Array.from({ length: 220 }, () => ({
     x: Math.random(),
     y: Math.random(),
-    r: Math.random() * 1.6 + 0.15,
-    a: Math.random() * 0.55 + 0.1,
-    s: Math.random() * 0.00035 + 0.00004,
-    layer: Math.random() > 0.75 ? 1 : 0,
+    r: Math.random() * 1.8 + 0.2,
+    a: Math.random() * 0.65 + 0.12,
+    s: Math.random() * 0.00045 + 0.00006,
+    layer: Math.random() > 0.7 ? 1 : 0,
   }));
   seedMotes(currentMoodId);
   window.addEventListener("resize", resizeCanvas);
@@ -142,9 +142,21 @@ function tick() {
   const accent = getComputedStyle(document.body).getPropertyValue("--mood-accent").trim() || "#6ec8e8";
   const dpr = devicePixelRatio;
 
-  ctx.globalAlpha = 0.045;
+  const orbX = w * (0.5 + Math.sin(t * 0.15) * 0.08);
+  const orbY = h * (0.22 + Math.cos(t * 0.12) * 0.03);
+  const orbR = Math.min(w, h) * 0.24;
+  const orb = ctx.createRadialGradient(orbX, orbY, 0, orbX, orbY, orbR);
+  orb.addColorStop(0, accent);
+  orb.addColorStop(1, "transparent");
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = orb;
+  ctx.beginPath();
+  ctx.arc(orbX, orbY, orbR, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.08;
   ctx.fillStyle = accent;
-  ctx.fillRect(0, h * 0.62, w, h * 0.38);
+  ctx.fillRect(0, h * 0.58, w, h * 0.42);
   ctx.globalAlpha = 1;
 
   stars.forEach((star) => {
@@ -239,7 +251,7 @@ export function animateSceneText() {
   const nodes = body.querySelectorAll("p, blockquote, li, .ending-card, .dialogue-block");
   nodes.forEach((node, i) => {
     node.classList.add("reveal");
-    node.style.animationDelay = `${0.08 + i * 0.12}s`;
+    node.style.animationDelay = `${0.03 + i * 0.07}s`;
   });
 }
 
