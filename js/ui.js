@@ -11,11 +11,11 @@ import { pulseSceneAtmosphere, flashSceneTitle } from "./atmosphere.js";
 import { renderSpeakerStrip } from "./portraits.js";
 import { setAudioMood, playClick } from "./audio.js";
 import {
-  showWorld3d,
-  hideWorld3d,
+  showWorld,
   setExplorationEnabled,
   setWorldFromScene,
-} from "./world3d.js";
+  getViewLabel,
+} from "./world-view.js";
 
 function applyMood(moodId) {
   if (!moodId) return;
@@ -49,7 +49,7 @@ function setDialogueCollapsed(collapsed) {
   if (tab) tab.hidden = !document.body.classList.contains("mode-3d") || !collapsed;
   document.querySelectorAll(".btn-panel-focus").forEach((btn) => {
     btn.setAttribute("aria-pressed", collapsed ? "true" : "false");
-    btn.textContent = collapsed ? "▶ 会話" : "◀ 3D";
+    btn.textContent = collapsed ? "▶ 会話" : `◀ ${getViewLabel()}`;
   });
 }
 
@@ -141,7 +141,7 @@ export function renderScene({ chapter, title, body, choices = [], mood, art, tit
   document.body.classList.toggle("title-backdrop", titleScreen);
 
   if (titleScreen) {
-    showWorld3d();
+    showWorld();
     setExplorationEnabled(false);
     setWorldFromScene({ art: "gate", mood: resolvedMood, location: location || "ホライズン — 地平門" });
     renderSceneHero(art || "title");
@@ -153,7 +153,7 @@ export function renderScene({ chapter, title, body, choices = [], mood, art, tit
       intense: true,
     });
   } else {
-    showWorld3d();
+    showWorld();
     setWorldFromScene({ art, mood: resolvedMood, location, speaker });
     setExplorationEnabled(true);
     renderSceneHero(null);
@@ -201,7 +201,7 @@ export function renderSystem({ title, desc, contentHtml, actions = [], systemId 
   showSystem();
   const meta = getSystemMeta(systemId);
   applyMood(meta.mood);
-  showWorld3d();
+  showWorld();
   setExplorationEnabled(false);
   setWorldFromScene({ art: meta.art, mood: meta.mood });
 

@@ -9,17 +9,36 @@
 
 **[▶ プロトタイプをプレイ](https://jim-auto.github.io/Utopia/)**
 
-序章以降は **Three.js / WebGL** による3D探索が有効になります。
+序章以降は **Three.js / WebGL** による3D探索、または **2Dドット絵** 探索が有効になります。フッターの **◈ 3D / ▣ 2D** で切り替え可能です。
 
 - **WASD / 矢印** — 移動
-- **ドラッグ** — 視点（三人称）
-- **V** — 一人称 / 三人称切替
+- **ドラッグ** — 視点（三人称・3Dのみ）
+- **V** — 一人称 / 三人称切替（3Dのみ）
 - **E / 調べる** — ランドマーク付近で場所の意味を発見
-- **ホイール** — カメラ距離
+- **ホイール** — カメラ距離（3Dのみ）
 - 左スティック（タッチ端末）— 移動
 - 発光オブジェクトに **Bloom**、空は **シェーダ空**、話者NPCは **3Dラベル** で表示
 
 物語の選択は画面下部のパネルから進めます。
+
+### 2Dドット絵探索
+
+フッターの **▣ 2D** に切り替えると、Canvas ピクセルアートの俯瞰マップで同じ世界を歩けます。
+
+![2D探索 — ホライズン / 地平門](docs/images/world2d-explore.png)
+
+<details>
+<summary>8地域のスクリーンショット</summary>
+
+![2D探索 — 全8地域](docs/images/world2d-gallery.png)
+
+</details>
+
+- 各地域のドット絵タイル・オブジェクト・ランドマーク
+- NPCビーコン（話者キャラの色付きスプライト）
+- ミニマップ・パーティクル・道タイル
+
+> スクリーンショットの再生成: `npm install && npx playwright install chromium && npm run capture:2d`
 
 > 初回は Settings → Pages → Build and deployment → Source を **GitHub Actions** に設定し、`main` へ push してください。
 
@@ -40,6 +59,7 @@ npx serve .
 | システム | 体験できる内容 |
 |---------|---------------|
 | **3D探索** | 地域ごとの低ポリ環境を歩き回る（Three.js） |
+| **2D探索** | ドット絵スタイルの俯瞰マップ（パーティクル・ミニマップ・各地域オブジェクト） |
 | プレゼンス | 同時に選べない出来事、見送った記録 |
 | 誓約 | ソリの初演 / 無名の集団との約束 |
 | コヴナント・グラマー | 制度条項の選択と試行（#03 #04 #05 #06 #07 #12） |
@@ -70,8 +90,9 @@ npx serve .
 
 ```
 index.html          # ブラウザ版プロトタイプ（Three.js import map）
-css/  js/           # ゲーム本体（js/world3d.js, js/player-model.js）
+css/  js/           # ゲーム本体（js/world3d.js, js/world2d.js, js/player-model.js）
 docs/
+  images/           # README 用スクリーンショット
   gdd/              # 企画・世界観・物語
   systems/          # システム仕様
   glossary.md       # 用語集

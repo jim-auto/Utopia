@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "capture:2d": "node scripts/capture-world2d.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.0"
+  }
+}

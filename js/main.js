@@ -18,7 +18,7 @@ import { getSceneHandlers, renderEpilogue } from "./scenes.js";
 import { miniPortrait } from "./portraits.js";
 import { initAmbience, setMood } from "./visuals.js";
 import { initAudio, bindAudioToggle } from "./audio.js";
-import { initWorld3d, setDiscoverHandler } from "./world3d.js";
+import { initWorldView, setDiscoverHandler } from "./world-view.js";
 import { simulateFiveYears } from "./covenant-sim.js";
 import {
   buildClauseForm as buildEvent04Form,
@@ -1073,7 +1073,7 @@ export function createGame() {
 
 export function startGame() {
   initAmbience();
-  initWorld3d();
+  initWorldView();
   initAudio();
   bindAudioToggle();
   setMood("cosmos");

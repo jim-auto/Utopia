@@ -355,7 +355,7 @@ export function setDiscoverHandler(fn) {
   onDiscover = fn;
 }
 
-function tryInteract() {
+export function tryInteract() {
   if (!explorationEnabled || !nearestInteract || nearestInteract.dist >= 3.2) return;
 
   const discovery = WORLD_DISCOVERIES[currentWorldId];
@@ -686,6 +686,10 @@ function tick() {
 
 let clock;
 
+export function isWorld3dAvailable() {
+  return !!renderer;
+}
+
 export function initWorld3d() {
   const wrap = document.getElementById("world3d-wrap");
   if (!wrap) return;
@@ -694,7 +698,7 @@ export function initWorld3d() {
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
   } catch (err) {
     console.error("WebGL unavailable:", err);
-    wrap.innerHTML = "<p class='world3d-fallback'>WebGL が利用できません。2Dモードで続行してください。</p>";
+    wrap.innerHTML = "<p class='world3d-fallback'>WebGL が利用できません。2Dドット絵モードを使用します。</p>";
     return;
   }
 
@@ -771,8 +775,6 @@ export function initWorld3d() {
   clock = new THREE.Clock();
   bindInput();
   bindTouchStick();
-  const interactBtn = document.getElementById("btn-interact");
-  if (interactBtn) interactBtn.addEventListener("click", tryInteract);
   loadWorld("horizon", true);
   cameraIntro = 1;
   cameraOrbit.distance = CAMERA_INTRO_FROM;

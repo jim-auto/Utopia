@@ -22,6 +22,7 @@
 <body data-mood="cosmos">
   <div id="app">
     <div id="world3d-wrap" hidden aria-hidden="true"></div>
+    <div id="world2d-wrap" hidden aria-hidden="true"></div>
     <div id="world3d-hint" class="world3d-hint" hidden>WASD / 矢印 — 移動 · ドラッグ — 視点 · ホイール — 距離</div>
     <div id="touch-stick" class="touch-stick" hidden aria-label="移動スティック">
       <div class="touch-stick-base"></div>
@@ -78,7 +79,7 @@
         <div class="panel-inner">
           <div class="panel-dock-bar">
             <span class="panel-dock-label">物語</span>
-            <button type="button" class="btn-panel-focus" id="btn-panel-focus" aria-pressed="false" title="3D表示を広げる">◀ 3D</button>
+            <button type="button" class="btn-panel-focus" id="btn-panel-focus" aria-pressed="false" title="探索表示を広げる">◀ 3D</button>
           </div>
           <div class="speaker-strip" id="speaker-strip" hidden></div>
           <p class="chapter-tag" id="chapter-tag"></p>
@@ -97,7 +98,7 @@
         <div class="panel-inner">
           <div class="panel-dock-bar">
             <span class="panel-dock-label">システム</span>
-            <button type="button" class="btn-panel-focus btn-panel-focus-system" aria-pressed="false" title="3D表示を広げる">◀ 3D</button>
+            <button type="button" class="btn-panel-focus btn-panel-focus-system" aria-pressed="false" title="探索表示を広げる">◀ 3D</button>
           </div>
           <div class="system-header">
             <h2 id="system-title"></h2>
@@ -129,10 +130,11 @@
 
     <footer class="footer" id="footer">
       <div class="footer-left">
+        <button type="button" class="btn btn-ghost btn-icon" id="btn-view-mode" aria-pressed="false" title="2Dドット絵に切り替え">◈ 3D</button>
         <button type="button" class="btn btn-ghost btn-icon" id="btn-audio" aria-pressed="false">🔊 音 ON</button>
         <button type="button" class="btn btn-ghost" id="btn-restart" hidden>最初から</button>
       </div>
-      <span class="footer-note">UTOPIA prototype — 3D探索 + ナラティブ</span>
+      <span class="footer-note">UTOPIA prototype — 3D / 2D探索 + ナラティブ</span>
     </footer>
   </div>
 

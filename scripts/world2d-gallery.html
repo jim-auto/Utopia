@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>UTOPIA 2D Gallery</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #070b14;
+      color: #eef3f8;
+      font-family: "Courier New", monospace;
+    }
+    h1 {
+      font-size: 14px;
+      letter-spacing: 0.2em;
+      margin: 0 0 8px;
+      color: #6ec8e8;
+    }
+    p {
+      margin: 0 0 20px;
+      font-size: 11px;
+      color: #9aafc4;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      max-width: 960px;
+    }
+    .card {
+      background: #0a1018;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 8px;
+    }
+    .card canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      image-rendering: pixelated;
+      border-radius: 4px;
+    }
+    .label {
+      margin-top: 8px;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: #9aafc4;
+    }
+    .label strong { color: #eef3f8; }
+    #hero-wrap {
+      margin-bottom: 24px;
+      max-width: 960px;
+      border: 1px solid rgba(110,200,232,0.2);
+      border-radius: 10px;
+      padding: 10px;
+      background: #0a1018;
+    }
+    #hero-wrap canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      image-rendering: pixelated;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div id="hero-wrap">
+    <canvas id="hero" width="640" height="360"></canvas>
+  </div>
+  <h1>UTOPIA — 2D DOT EXPLORATION</h1>
+  <p>8 regions · pixel map · landmarks · NPC beacons</p>
+  <div class="grid" id="grid"></div>
+  <script type="module">
+    import { WORLD_CONFIG } from "../js/world-config.js";
+    import {
+      WORLD_LANDMARKS,
+      WORLD_SPAWN,
+      WORLD_PROPS,
+      isOnPath,
+      drawWitnessSprite,
+      drawProp,
+      drawLandmarkArt,
+      drawParallaxHills,
+      spawnParticle,
+      drawParticle,
+      getNpcColor,
+    } from "../js/world2d-art.js";
+
+    const WORLDS = [
+      { id: "horizon", name: "ホライズン", sub: "地平門" },
+      { id: "garden", name: "コモン・ガーデン", sub: "祭りの広場" },
+      { id: "chorus", name: "コーラス", sub: "共有室" },
+      { id: "palimpsest", name: "パリンプセスト", sub: "記録の環" },
+      { id: "atelier", name: "アトリエ", sub: "初演の舞台" },
+      { id: "council", name: "公共議会", sub: "モザイク" },
+      { id: "abyss", name: "アビス", sub: "深層クレバス" },
+      { id: "forge", name: "フォージ", sub: "試着室" },
+    ];
+
+    const ACCENTS = {
+      horizon: "#6ec8e8",
+      garden: "#7ecf9a",
+      chorus: "#e8a8c8",
+      palimpsest: "#a8a0e8",
+      atelier: "#e8926a",
+      council: "#88b8e8",
+      abyss: "#5ec8d8",
+      forge: "#e8c878",
+    };
+
+    const NPC_SPEAKER = {
+      horizon: "aster",
+      garden: "haru",
+      chorus: "io",
+      palimpsest: "sen",
+      atelier: "soli",
+      council: "kaede",
+      abyss: "nagi",
+      forge: "child",
+    };
+
+    const WORLD_BOUNDS = 24;
+    const PX_PER_UNIT = 7;
+    const elapsed = 2.4;
+
+    function hexToRgb(hex) {
+      const h = hex.replace("#", "");
+      const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
+      return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+    }
+
+    function mix(c1, c2, t) {
+      const a = hexToRgb(c1);
+      const b = hexToRgb(c2);
+      return `rgb(${Math.round(a.r + (b.r - a.r) * t)},${Math.round(a.g + (b.g - a.g) * t)},${Math.round(a.b + (b.b - a.b) * t)})`;
+    }
+
+    function seededRandom(seed) {
+      let s = seed >>> 0;
+      return () => {
+        s = (s * 1664525 + 1013904223) >>> 0;
+        return s / 4294967296;
+      };
+    }
+
+    function worldToScreen(wx, wy, camX, camY, w, h) {
+      return {
+        x: (wx - camX) * PX_PER_UNIT + w / 2,
+        y: (wy - camY) * PX_PER_UNIT + h / 2,
+      };
+    }
+
+    function drawScene(ctx, worldId, w, h) {
+      const cfg = WORLD_CONFIG[worldId];
+      const accent = ACCENTS[worldId];
+      const decorSeed = worldId.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+      const lm = WORLD_LANDMARKS[worldId];
+      const spawn = WORLD_SPAWN[worldId];
+      const camX = (spawn.x + lm.x) * 0.35;
+      const camY = (spawn.y + lm.y) * 0.35;
+
+      ctx.imageSmoothingEnabled = false;
+
+      const grad = ctx.createLinearGradient(0, 0, 0, h * 0.55);
+      grad.addColorStop(0, cfg.skyTop);
+      grad.addColorStop(1, cfg.skyBottom);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h * 0.55);
+
+      drawParallaxHills(ctx, cfg, mix, camX, camY, elapsed, w, h);
+
+      const groundTop = h * 0.42;
+      const ggrad = ctx.createLinearGradient(0, groundTop, 0, h);
+      ggrad.addColorStop(0, mix(cfg.horizon, cfg.skyBottom, 0.5));
+      ggrad.addColorStop(1, cfg.fogColor);
+      ctx.fillStyle = ggrad;
+      ctx.fillRect(0, groundTop, w, h - groundTop);
+
+      const startTx = Math.floor(camX - w / PX_PER_UNIT / 2) - 1;
+      const endTx = Math.ceil(camX + w / PX_PER_UNIT / 2) + 1;
+      const startTy = Math.floor(camY - h / PX_PER_UNIT / 2) - 1;
+      const endTy = Math.ceil(camY + h / PX_PER_UNIT / 2) + 1;
+
+      for (let ty = startTy; ty <= endTy; ty++) {
+        for (let tx = startTx; tx <= endTx; tx++) {
+          if (Math.abs(tx) > WORLD_BOUNDS || Math.abs(ty) > WORLD_BOUNDS) continue;
+          const { x: sx, y: sy } = worldToScreen(tx, ty, camX, camY, w, h);
+          const hash = (tx * 73856093 ^ ty * 19349663 ^ decorSeed) >>> 0;
+          const onPath = isOnPath(tx, ty, worldId);
+          const v = (hash % 5) / 10;
+          ctx.fillStyle = onPath
+            ? mix(cfg.horizon, accent, 0.12 + v * 0.05)
+            : mix(cfg.horizon, cfg.fogColor, 0.35 + v);
+          ctx.fillRect(Math.floor(sx), Math.floor(sy), Math.ceil(PX_PER_UNIT), Math.ceil(PX_PER_UNIT));
+        }
+      }
+
+      for (const prop of WORLD_PROPS[worldId] || []) {
+        const { x: sx, y: sy } = worldToScreen(prop.x, prop.y, camX, camY, w, h);
+        drawProp(ctx, prop.type, sx, sy, accent, cfg, mix, elapsed);
+      }
+
+      const rng = seededRandom(decorSeed + 42);
+      for (let i = 0; i < 10; i++) {
+        const p = spawnParticle(worldId, rng);
+        const { x: sx, y: sy } = worldToScreen(p.x, p.y, camX, camY, w, h);
+        drawParticle(ctx, p, sx, sy, accent, mix, elapsed);
+      }
+
+      const { x: lsx, y: lsy } = worldToScreen(lm.x, lm.y, camX, camY, w, h);
+      drawLandmarkArt(ctx, worldId, lsx, lsy, accent, cfg, mix, elapsed, false);
+
+      const speaker = NPC_SPEAKER[worldId];
+      const npcX = lm.x + 3.5;
+      const npcY = lm.y + 1.5;
+      const npcColor = getNpcColor(speaker);
+      const { x: nsx, y: nsy } = worldToScreen(npcX, npcY, camX, camY, w, h);
+      drawWitnessSprite(ctx, nsx, nsy, 0, 1, npcColor, false);
+
+      const { x: psx, y: psy } = worldToScreen(spawn.x, spawn.y, camX, camY, w, h);
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      ctx.beginPath();
+      ctx.ellipse(Math.floor(psx), Math.floor(psy) + 2, 5, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      drawWitnessSprite(ctx, psx, psy, Math.PI / 2, 0, accent, true);
+    }
+
+    const grid = document.getElementById("grid");
+    for (const world of WORLDS) {
+      const card = document.createElement("div");
+      card.className = "card";
+      const canvas = document.createElement("canvas");
+      canvas.width = 320;
+      canvas.height = 180;
+      drawScene(canvas.getContext("2d"), world.id, 320, 180);
+      const label = document.createElement("div");
+      label.className = "label";
+      label.innerHTML = `<strong>${world.name}</strong> — ${world.sub}`;
+      card.appendChild(canvas);
+      card.appendChild(label);
+      grid.appendChild(card);
+    }
+
+    const hero = document.getElementById("hero");
+    drawScene(hero.getContext("2d"), "horizon", 640, 360);
+    document.body.dataset.ready = "1";
+  </script>
+</body>
+</html>
