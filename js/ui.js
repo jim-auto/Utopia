@@ -113,6 +113,7 @@ export function renderSidebar(state) {
   const eventsEl = document.getElementById("events-list");
   if (eventsEl) {
     const events = [];
+    if (state.flags.ev02_done) events.push("匿名の村");
     if (state.flags.ev04_done) events.push("忘れられる権利");
     if (state.flags.ev05_done) events.push("百年庭園");
     if (state.flags.ev06_done) events.push("感覚の共有期間");

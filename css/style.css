@@ -1934,6 +1934,100 @@ body.mode-3d .title-screen .scene-hero {
   font-size: 0.82rem;
 }
 
+/* SYS-07 — 匿名の境界 */
+.anon-gate {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.anon-lead {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.anon-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--bg-panel-border);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.anon-seg-anon { background: var(--mood-accent); opacity: 0.85; }
+.anon-seg-open { background: #a8c8e8; opacity: 0.75; }
+.anon-seg-border { background: #c8b878; opacity: 0.75; }
+
+.anon-axes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.anon-axis {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--bg-panel-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.anon-axis-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.anon-axis-label {
+  color: var(--mood-accent);
+  font-family: var(--font-serif);
+}
+
+.anon-axis-val {
+  font-family: ui-monospace, monospace;
+  color: var(--accent-gold);
+}
+
+.anon-axis-desc {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.anon-stepper {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.anon-btn {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--bg-panel-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.anon-btn:hover {
+  border-color: var(--mood-accent);
+  color: var(--mood-accent);
+}
+
+.anon-remaining {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.anon-remaining-warn b { color: #e8a060; }
+.anon-remaining-ok b { color: var(--mood-accent); }
+
+.anon-skip-btn {
+  align-self: flex-start;
+  font-size: 0.82rem;
+}
+
 .tag-row {
   display: flex;
   flex-wrap: wrap;

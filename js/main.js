@@ -26,6 +26,11 @@ import {
   getDeliberationExtraReason as getEvent04Reason,
 } from "./covenant-event-04.js";
 import {
+  buildClauseForm as buildEvent02Form,
+  simulateEvent02,
+  getDeliberationReason as getEvent02Reason,
+} from "./covenant-event-02.js";
+import {
   buildClauseForm as buildEvent05Form,
   simulateEvent05,
   getDeliberationReason as getEvent05Reason,
@@ -71,6 +76,7 @@ import { mountForgeTryon } from "./forge-tryon.js";
 import { mountCoParentWeave } from "./co-parent-weave.js";
 import { mountArenaLife } from "./arena-life.js";
 import { mountApologyRite } from "./apology-rite.js";
+import { mountAnonymousGate } from "./anonymous-gate.js";
 
 const scenes = {};
 
@@ -90,6 +96,7 @@ export function createGame() {
     renderRefusalPicker,
     renderPresence,
     renderCovenant,
+    renderEvent02Covenant,
     renderEvent04Covenant,
     renderEvent05Covenant,
     renderEvent06Covenant,
@@ -104,6 +111,7 @@ export function createGame() {
     renderCoParentWeave,
     renderArenaLife,
     renderApologyRite,
+    renderAnonymousGate,
     renderDeliberation,
     renderEndingPicker,
     renderEpilogue: () => renderEpilogue(game),
@@ -246,6 +254,61 @@ export function createGame() {
           },
         },
       ],
+    });
+  }
+
+  function renderEvent02Covenant() {
+    const selected = new Set(["exitAnytime", "noRealNameRecord", "leakForgiveness"]);
+
+    renderSystem({
+      title: "コヴナント事件 #02 — 匿名の村",
+      desc: "退出権 × 透明性 × 外部との関係。名前のない共同体を設計する。",
+      systemId: "covenant",
+      contentHtml: `<div id="event02-form">${buildEvent02Form(selected)}</div>`,
+      actions: [
+        {
+          label: "ガーデンで試行を開始する（3年後に再訪）",
+          action: () => {
+            document.querySelectorAll("#event02-form input").forEach((input) => {
+              if (input.checked) state.flags[`ev02_${input.dataset.key}`] = true;
+            });
+            state.flags.ev02_done = true;
+            state.event02Sim = simulateEvent02(state);
+            if (state.flags.ev02_exitAnytime) bumpTrust(state, "haru", 2);
+            if (state.flags.ev02_noRealNameRecord) bumpTrust(state, "sen", 1);
+            go("event02_revisit");
+          },
+        },
+      ],
+    });
+
+    document.getElementById("system-content").addEventListener("change", (e) => {
+      if (e.target.type === "checkbox") {
+        const key = e.target.dataset.key;
+        if (e.target.checked) selected.add(key);
+        else selected.delete(key);
+      }
+    });
+  }
+
+  function renderAnonymousGate() {
+    renderSystem({
+      title: "SYS-07 — 匿名の境界",
+      desc: "村の門の設計。12ヶ月を匿名・透明・外部関係に配分——正解はない。",
+      systemId: "anonGate",
+      contentHtml: `<div id="anon-gate-root"></div>`,
+      actions: [],
+    });
+
+    mountAnonymousGate(document.getElementById("anon-gate-root"), {
+      onComplete: (result) => {
+        state.anonymousGateResult = result;
+        state.flags.anon_gate_done = true;
+        if (result.profile === "openLead") bumpTrust(state, "sen", 1);
+        if (result.profile === "anonLead") bumpTrust(state, "haru", 1);
+        go("event02_gate_result");
+      },
+      onSkip: () => renderEvent02Covenant(),
     });
   }
 
@@ -779,6 +842,10 @@ export function createGame() {
       },
     ];
 
+    if (state.flags.ev02_done) {
+      reasons.push(getEvent02Reason());
+    }
+
     if (state.flags.ev04_done) {
       const extra = getEvent04Reason();
       reasons.push({ ...extra, id: "lin" });
@@ -843,6 +910,7 @@ export function createGame() {
           <span class="tag ${picked.size >= 2 ? "active" : ""}">退出権の保障</span>
           <span class="tag ${picked.has("child") ? "active" : ""}">未来人の再選択</span>
           <span class="tag ${picked.has("sen") ? "active" : ""}">異議の記録</span>
+          ${state.flags.ev02_done ? `<span class="tag ${picked.has("haruAnon") ? "active" : ""}">匿名の退出</span>` : ""}
           ${state.flags.ev04_done ? `<span class="tag ${picked.has("lin") ? "active" : ""}">記憶の隙間</span>` : ""}
           ${state.flags.ev05_done ? `<span class="tag ${picked.has("haru") ? "active" : ""}">終わらない庭</span>` : ""}
           ${state.flags.ev06_done ? `<span class="tag ${picked.has("io") ? "active" : ""}">切れる共有</span>` : ""}

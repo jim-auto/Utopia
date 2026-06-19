@@ -6,6 +6,10 @@ import {
   getFeaturedQuote as getEvent04Quote,
 } from "./covenant-event-04.js";
 import {
+  renderOutcomeCards as renderEvent02Cards,
+  getFeaturedQuote as getEvent02Quote,
+} from "./covenant-event-02.js";
+import {
   renderOutcomeCards as renderEvent05Cards,
   getFeaturedQuote as getEvent05Quote,
 } from "./covenant-event-05.js";
@@ -45,6 +49,7 @@ export function getSceneHandlers(game) {
     renderRefusalPicker,
     renderPresence,
     renderCovenant,
+    renderEvent02Covenant,
     renderEvent04Covenant,
     renderEvent05Covenant,
     renderEvent06Covenant,
@@ -59,6 +64,7 @@ export function getSceneHandlers(game) {
     renderCoParentWeave,
     renderArenaLife,
     renderApologyRite,
+    renderAnonymousGate,
     renderDeliberation,
     renderEndingPicker,
     renderEpilogue,
@@ -366,12 +372,12 @@ export function getSceneHandlers(game) {
               label: "誓約する — 試験期間中、匿名性を守る",
               action: () => {
                 game.addVow({ label: "匿名共同体の秘密を試験期間中守る", with: "無名の集団" });
-                go("chapter2_bridge");
+                go("event02_intro");
               },
             },
             {
               label: "誓約しない",
-              action: () => go("chapter2_bridge"),
+              action: () => go("event02_intro"),
             },
           ],
         });
@@ -408,6 +414,7 @@ export function getSceneHandlers(game) {
         title: "百年庭園",
         body: `
           <p>地球・コモン・ガーデン。百年かけて一つの庭を完成させる共同体がある——と、人々は言う。</p>
+          ${state.flags.ev02_done ? "<p>匿名の村の三年試行が終わった。次は、<em>終わらない庭</em>の話だ。</p>" : ""}
           ${say("haru", "完成は目標であって、期限ではない。去る人も、残る人も、どちらも正しい。")}
           <p>第三章の前に、ここで試行を見届けるかどうかを選べる。</p>
         `,
@@ -416,8 +423,17 @@ export function getSceneHandlers(game) {
         art: "garden",
         speaker: "haru",
         choices: [
+          ...(!state.flags.ev02_done
+            ? [
+                {
+                  label: "匿名の村の試行を見届ける（事件 #02）",
+                  hint: "退出権 × 透明性 × 外部との関係",
+                  action: () => go("event02_intro"),
+                },
+              ]
+            : []),
           {
-            label: "百年庭園の試験を見届ける（事件 #05）",
+            label: "百年庭園の試行を見届ける（事件 #05）",
             hint: "完成の遅延・放棄の自由・世代交代",
             action: () => go("event05_intro"),
           },
@@ -427,6 +443,82 @@ export function getSceneHandlers(game) {
           },
         ],
       }),
+
+    event02_intro: () =>
+      go({
+        chapter: "第二章",
+        title: "匿名の村",
+        body: `
+          <p>コモン・ガーデン。個人名を使わない共同体——呼ばれ方は月替わり、記録も外部への言及も試行期間中は禁じられている。</p>
+          ${state.flags.joinedAnonymous ? "<p>あなたはこの期間、無名の集団に<strong>時間を預けた</strong>。退出権と透明性のあいだで、共同体は揺れている。</p>" : "<p>ソリの初演を選んだあなたも、後からこの試行を見届けることができる——匿名と透明の衝突は、船団全体の問いだ。</p>"}
+          ${state.refusal === "fame" ? "<p>あなたは<strong>名声</strong>を拒んだ。名前のない村は、その拒否の延長線上にある。</p>" : ""}
+          ${state.refusal === "family" ? "<p>あなたは<strong>家族</strong>を拒んだ。血縁のない者だけが、選んだ関係で集まっている。</p>" : ""}
+          ${say("haru", "匿名で入った者も、匿名で去れる。それが、この村の礼儀だ。")}
+          ${say("sen", "記録がない関係は美しい。ただし、責任の所在も曖昧になる——退出権を先に書いて。")}
+          <p>3D空間で<strong>匿名の門</strong>へ近づき、<strong>E</strong>で調べてから、境界設計または条項へ。</p>
+        `,
+        period: 2,
+        location: "コモン・ガーデン",
+        mood: "garden",
+        art: "garden",
+        speaker: "haru",
+        choices: [
+          {
+            label: "12ヶ月の境界を設計する — 匿名・透明・外部（SYS-07）",
+            action: () => renderAnonymousGate(),
+          },
+          {
+            label: "境界を設計せず — 条項だけ組む",
+            action: () => renderEvent02Covenant(),
+          },
+        ],
+      }),
+
+    event02_gate_result: () => {
+      const r = state.anonymousGateResult;
+      go({
+        chapter: "第二章",
+        title: "匿名の境界 — 設計のあと",
+        body: `
+          <p>境界ID <code>${r?.signature || "—"}</code></p>
+          <p class="sim-lead">${r?.lead || ""}</p>
+          ${say("haru", "匿名で入った者も、匿名で去れる。それが、この村の礼儀だ。")}
+          <p>共同体の条項を、これから組む。</p>
+        `,
+        location: "コモン・ガーデン",
+        mood: "garden",
+        art: "garden",
+        speaker: "haru",
+        choices: [{ label: "コヴナント・グラマー — 匿名共同体の条項を組む", action: () => renderEvent02Covenant() }],
+      });
+    },
+
+    event02_revisit: () => {
+      const sim = state.event02Sim || { summary: "", outcomes: [], tension: "medium" };
+      const quote = getEvent02Quote(sim);
+      go({
+        chapter: "第二章",
+        title: "匿名の村 — 三年後",
+        body: `
+          <p class="sim-lead">${sim.summary}</p>
+          ${renderEvent02Cards(sim.outcomes)}
+          <p>退出の自由、内部匿名、外部言及の禁止——条項は実行されたが、「比喩的言及」という抜け道も invent された。</p>
+          ${quote ? say(quote.npc, quote.quote) : ""}
+          <p>匿名共同体の試行は、百年庭園や出発憲章にも影響を与えるだろう。</p>
+        `,
+        period: 2,
+        location: "コモン・ガーデン",
+        mood: sim.tension === "high" ? "vow" : "garden",
+        art: "garden",
+        speaker: quote?.npc,
+        choices: [
+          {
+            label: "百年庭園へ — 次の試行を見届ける",
+            action: () => go("chapter2_bridge"),
+          },
+        ],
+      });
+    },
 
     event05_intro: () =>
       go({
@@ -487,6 +579,15 @@ export function getSceneHandlers(game) {
         art: "covenant",
         speaker: "child",
         choices: [
+          ...(!state.flags.ev02_done
+            ? [
+                {
+                  label: "コモン・ガーデン — 匿名の村（事件 #02）",
+                  hint: "退出権 × 透明性 × 外部との関係",
+                  action: () => go("event02_intro"),
+                },
+              ]
+            : []),
           {
             label: "パリンプセスト — 忘れられる権利（事件 #04）",
             hint: "記憶の削除と歴史の連続が衝突する試験",
@@ -1023,7 +1124,7 @@ export function getSceneHandlers(game) {
         chapter: "第四章",
         title: "理由の地図",
         body: `
-          <p>あなたが提案した制度は、五年の試行を経た。${state.flags.ev12_done ? "モザイクの一年評価も、議題に加わる。" : ""}${state.flags.ev11_done ? " 共同親の試行も、議題に加わる。" : ""}${state.flags.ev10_done ? " 非記録謝罪の試行も、議題に加わる。" : ""}${state.flags.ev09_done ? " 競技共同体の試行も、議題に加わる。" : ""}支持者と反対者が、公共議会に集う。</p>
+          <p>あなたが提案した制度は、五年の試行を経た。${state.flags.ev12_done ? "モザイクの一年評価も、議題に加わる。" : ""}${state.flags.ev11_done ? " 共同親の試行も、議題に加わる。" : ""}${state.flags.ev10_done ? " 非記録謝罪の試行も、議題に加わる。" : ""}${state.flags.ev09_done ? " 競技共同体の試行も、議題に加わる。" : ""}${state.flags.ev02_done ? " 匿名共同体の試行も、議題に加わる。" : ""}支持者と反対者が、公共議会に集う。</p>
           <p>ここでの勝利条件は全会一致ではない。<strong>安定した異議</strong>——反対者が賛成しなくても、負担が理解され、退出権が残り、意見が記録されれば、決定は正当になる。</p>
         `,
         period: 4,
