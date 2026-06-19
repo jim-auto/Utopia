@@ -1,5 +1,6 @@
 import { ENDINGS, REFUSALS } from "./state.js";
 import { say } from "./portraits.js";
+import { renderOutcomeCards, getFeaturedQuote } from "./covenant-sim.js";
 
 export function getSceneHandlers(game) {
   const { state, go, renderRefusalPicker, renderPresence, renderCovenant, renderDeliberation, renderEndingPicker, renderEpilogue } = game;
@@ -232,6 +233,28 @@ export function getSceneHandlers(game) {
         speaker: "child",
         choices: [{ label: "コヴナント・グラマー — 制度を試作する", action: () => renderCovenant() }],
       }),
+
+    chapter3b: () => {
+      const sim = state.covenantSim || { summary: "", outcomes: [], tension: "medium" };
+      const quote = getFeaturedQuote(state, sim);
+      go({
+        chapter: "第三章",
+        title: "五年後の再訪",
+        body: `
+          <p class="sim-lead">${sim.summary}</p>
+          ${renderOutcomeCards(sim.outcomes)}
+          <p>制度は条文どおりに動いていない。人々は<strong>解釈</strong>し、<strong>抜け道</strong>を見つけ、<strong>儀式</strong>に変え、次世代へ渡している。</p>
+          ${quote ? say(quote.npc, quote.quote) : ""}
+          <p>いよいよ、支持者と反対者が公共議会に集う。</p>
+        `,
+        period: 3,
+        location: "ホライズン",
+        mood: sim.tension === "high" ? "vow" : "law",
+        art: "covenant",
+        speaker: quote?.npc,
+        choices: [{ label: "第四章 — 理由の地図", action: () => go("chapter4") }],
+      });
+    },
 
     chapter4: () =>
       go({

@@ -18,6 +18,7 @@ import { getSceneHandlers, renderEpilogue } from "./scenes.js";
 import { miniPortrait } from "./portraits.js";
 import { initAmbience, setMood } from "./visuals.js";
 import { initAudio, bindAudioToggle } from "./audio.js";
+import { simulateFiveYears } from "./covenant-sim.js";
 
 const scenes = {};
 
@@ -253,7 +254,8 @@ export function createGame() {
               }
             });
             if (state.flags.cov_childChoice) bumpTrust(state, "children", 2);
-            go("chapter4");
+            state.covenantSim = simulateFiveYears(state);
+            go("chapter3b");
           },
         },
       ],

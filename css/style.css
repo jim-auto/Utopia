@@ -773,6 +773,46 @@ body { overflow-x: hidden; }
   flex-wrap: wrap;
 }
 
+.sim-lead {
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--bg-panel-border);
+  margin-bottom: 1.25rem !important;
+}
+
+.sim-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+
+.sim-card {
+  padding: 1rem 1.15rem;
+  border-radius: 10px;
+  border: 1px solid var(--bg-panel-border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sim-stat {
+  font-family: var(--font-display);
+  color: var(--accent-gold);
+  font-size: 0.95rem;
+  margin-bottom: 0.35rem;
+}
+
+.sim-detail {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.sim-empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .tag-row {
   display: flex;
   flex-wrap: wrap;

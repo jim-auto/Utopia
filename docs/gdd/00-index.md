@@ -23,10 +23,11 @@
 | # | 章 | ファイル |
 |---|-----|---------|
 | 9 | [100時間構造](09-content-volume.md) | 時間配分、再訪モデル |
-| 10 | [既存作品との差別化](10-differentiation.md) | 比較表 |
-| 11 | [根本課題と対策](11-design-challenges.md) | 成立条件、個別リスク |
-| 12 | [創作上の規則](12-creative-rules.md) | 絶対に破ってはいけないルール |
-| 13 | [楽園のその後](13-interpretation.md) | テーマの最終解釈 |
+| 10 | [18本のコヴナント事件](../content/covenant-events.md) | 長編コンテンツ一覧 |
+| 11 | [既存作品との差別化](10-differentiation.md) | 比較表 |
+| 12 | [根本課題と対策](11-design-challenges.md) | 成立条件、個別リスク |
+| 13 | [創作上の規則](12-creative-rules.md) | 絶対に破ってはいけないルール |
+| 14 | [楽園のその後](13-interpretation.md) | テーマの最終解釈 |
 
 ## 4. システム（詳細は systems/ 参照）
 
