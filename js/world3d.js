@@ -3,6 +3,7 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
+import { buildPlayerModel } from "./player-model.js";
 
 let renderer;
 let labelRenderer;
@@ -767,205 +768,52 @@ function updatePlayerAccent() {
     mat.color.set(accent);
     if (mat.emissive) mat.emissive.set(accent);
   }
+  if (player.userData.glow) player.userData.glow.color.set(accent);
   if (playerShadow?.material) {
     playerShadow.material.color.set(accent);
   }
 }
 
-function buildPlayerModel(accentColor) {
-  const root = new THREE.Group();
-  const accentMats = [];
-
-  const registerAccent = (mat) => {
-    accentMats.push(mat);
-    return mat;
-  };
-
-  const fabric = new THREE.MeshStandardMaterial({
-    color: "#101820",
-    roughness: 0.9,
-    metalness: 0.1,
-  });
-  const fabricTrim = new THREE.MeshStandardMaterial({
-    color: "#243040",
-    roughness: 0.82,
-    metalness: 0.15,
-  });
-  const skin = new THREE.MeshStandardMaterial({
-    color: "#e5dacf",
-    roughness: 0.78,
-    metalness: 0.02,
-  });
-
-  const hips = new THREE.Group();
-  hips.position.y = 0.88;
-
-  function makeLeg(x) {
-    const leg = new THREE.Group();
-    leg.position.x = x;
-    const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.075, 0.44, 8), fabric);
-    thigh.position.y = -0.22;
-    thigh.castShadow = true;
-    const shin = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.065, 0.42, 8), fabricTrim);
-    shin.position.y = -0.62;
-    shin.castShadow = true;
-    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.07, 0.24), fabric);
-    foot.position.set(0, -0.86, 0.05);
-    foot.castShadow = true;
-    leg.add(thigh, shin, foot);
-    return leg;
-  }
-
-  const legL = makeLeg(-0.15);
-  const legR = makeLeg(0.15);
-
-  const torso = new THREE.Group();
-  torso.position.y = 1.18;
-
-  const chest = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.26, 0.52, 10), fabric);
-  chest.castShadow = true;
-
-  const shoulders = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.12, 0.28), fabricTrim);
-  shoulders.position.y = 0.22;
-  shoulders.castShadow = true;
-
-  const gem = new THREE.Mesh(
-    new THREE.OctahedronGeometry(0.09, 0),
-    registerAccent(
-      new THREE.MeshStandardMaterial({
-        color: accentColor,
-        emissive: accentColor,
-        emissiveIntensity: 0.95,
-        roughness: 0.15,
-        metalness: 0.45,
-      })
-    )
-  );
-  gem.position.set(0, 0.04, 0.22);
-
-  const gemAura = new THREE.Mesh(
-    new THREE.SphereGeometry(0.14, 12, 12),
-    registerAccent(
-      new THREE.MeshStandardMaterial({
-        color: accentColor,
-        emissive: accentColor,
-        emissiveIntensity: 0.35,
-        transparent: true,
-        opacity: 0.22,
-        depthWrite: false,
-      })
-    )
-  );
-  gemAura.position.copy(gem.position);
-
-  const head = new THREE.Group();
-  head.position.y = 0.46;
-
-  const face = new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 14), skin);
-  face.castShadow = true;
-
-  const hood = new THREE.Mesh(
-    new THREE.SphereGeometry(0.2, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.62),
-    fabric
-  );
-  hood.position.y = 0.03;
-  hood.castShadow = true;
-
-  const halo = new THREE.Mesh(
-    new THREE.TorusGeometry(0.27, 0.018, 6, 36),
-    registerAccent(
-      new THREE.MeshStandardMaterial({
-        color: accentColor,
-        emissive: accentColor,
-        emissiveIntensity: 0.65,
-        transparent: true,
-        opacity: 0.8,
-      })
-    )
-  );
-  halo.rotation.x = Math.PI / 2.4;
-  halo.position.set(0, 0.08, -0.06);
-
-  function makeArm(x, rotZ) {
-    const arm = new THREE.Group();
-    arm.position.set(x, 0.12, 0);
-    arm.rotation.z = rotZ;
-    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.32, 8), fabricTrim);
-    upper.position.y = -0.16;
-    upper.castShadow = true;
-    const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.042, 0.28, 8), fabric);
-    lower.position.y = -0.44;
-    lower.castShadow = true;
-    arm.add(upper, lower);
-    return arm;
-  }
-
-  const armL = makeArm(-0.34, 0.18);
-  const armR = makeArm(0.34, -0.18);
-
-  const cape = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 1.05, 1, 3), fabric);
-  cape.position.set(0, -0.08, -0.24);
-  cape.rotation.x = 0.22;
-  cape.castShadow = true;
-
-  const coatTailL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.55, 0.06), fabric);
-  coatTailL.position.set(-0.16, -0.42, -0.12);
-  coatTailL.rotation.x = 0.35;
-  const coatTailR = coatTailL.clone();
-  coatTailR.position.x = 0.16;
-
-  const groundRing = new THREE.Mesh(
-    new THREE.TorusGeometry(0.44, 0.022, 8, 48),
-    registerAccent(
-      new THREE.MeshStandardMaterial({
-        color: accentColor,
-        emissive: accentColor,
-        emissiveIntensity: 0.4,
-        transparent: true,
-        opacity: 0.65,
-      })
-    )
-  );
-  groundRing.rotation.x = Math.PI / 2;
-  groundRing.position.y = 0.03;
-
-  head.add(face, hood, halo);
-  torso.add(chest, shoulders, gemAura, gem, head, cape, coatTailL, coatTailR, armL, armR);
-  hips.add(legL, legR);
-  root.add(groundRing, hips, torso);
-
-  root.userData = {
-    accentMats,
-    walkParts: { legL, legR, armL, armR, cape, torso, gem, gemAura },
-  };
-
-  return root;
-}
-
 function animatePlayerWalk(dt, speed) {
   const parts = player?.userData?.walkParts;
   if (!parts) return;
+  const baseY = 1.2;
 
   if (speed > 0.35) {
     playerWalkPhase += dt * (9 + speed * 0.35);
     const swing = Math.sin(playerWalkPhase) * 0.52;
-    const bob = Math.abs(Math.sin(playerWalkPhase * 2)) * 0.035;
+    const bob = Math.abs(Math.sin(playerWalkPhase * 2)) * 0.04;
     parts.legL.rotation.x = swing;
     parts.legR.rotation.x = -swing;
-    parts.armL.rotation.x = -swing * 0.45;
-    parts.armR.rotation.x = swing * 0.45;
-    parts.torso.position.y = 1.18 + bob;
-    parts.cape.rotation.x = 0.22 + Math.sin(playerWalkPhase) * 0.08;
-    parts.gem.rotation.y += dt * 1.6;
-    parts.gemAura.scale.setScalar(1 + Math.sin(playerWalkPhase * 2) * 0.06);
+    parts.armL.rotation.x = -swing * 0.42;
+    parts.armR.rotation.x = swing * 0.42;
+    parts.torso.position.y = baseY + bob;
+    parts.cape.rotation.x = 0.24 + Math.sin(playerWalkPhase) * 0.1;
+    parts.capeInner.rotation.x = 0.18 + Math.sin(playerWalkPhase + 0.4) * 0.08;
+    parts.coatPanelL.rotation.z = Math.sin(playerWalkPhase) * 0.04;
+    parts.coatPanelR.rotation.z = -Math.sin(playerWalkPhase) * 0.04;
+    parts.coatTailL.rotation.x = 0.38 + swing * 0.08;
+    parts.coatTailR.rotation.x = 0.38 - swing * 0.08;
+    parts.halo.rotation.z = Math.sin(playerWalkPhase * 0.5) * 0.06;
+    parts.hoodPeak.rotation.x = -0.35 + Math.sin(playerWalkPhase) * 0.05;
+    parts.gem.rotation.y += dt * 1.8;
+    parts.gemShell.rotation.y -= dt * 1.2;
+    parts.gemRing.rotation.z += dt * 0.9;
+    parts.gemAura.scale.setScalar(1 + Math.sin(playerWalkPhase * 2) * 0.08);
   } else {
-    parts.legL.rotation.x = THREE.MathUtils.lerp(parts.legL.rotation.x, 0, 1 - Math.pow(0.001, dt));
-    parts.legR.rotation.x = THREE.MathUtils.lerp(parts.legR.rotation.x, 0, 1 - Math.pow(0.001, dt));
-    parts.armL.rotation.x = THREE.MathUtils.lerp(parts.armL.rotation.x, 0, 1 - Math.pow(0.001, dt));
-    parts.armR.rotation.x = THREE.MathUtils.lerp(parts.armR.rotation.x, 0, 1 - Math.pow(0.001, dt));
-    parts.torso.position.y = THREE.MathUtils.lerp(parts.torso.position.y, 1.18, 1 - Math.pow(0.001, dt));
-    parts.cape.rotation.x = THREE.MathUtils.lerp(parts.cape.rotation.x, 0.22, 1 - Math.pow(0.001, dt));
-    parts.gem.rotation.y += dt * 0.4;
+    const ease = 1 - Math.pow(0.001, dt);
+    parts.legL.rotation.x = THREE.MathUtils.lerp(parts.legL.rotation.x, 0, ease);
+    parts.legR.rotation.x = THREE.MathUtils.lerp(parts.legR.rotation.x, 0, ease);
+    parts.armL.rotation.x = THREE.MathUtils.lerp(parts.armL.rotation.x, 0, ease);
+    parts.armR.rotation.x = THREE.MathUtils.lerp(parts.armR.rotation.x, 0, ease);
+    parts.torso.position.y = THREE.MathUtils.lerp(parts.torso.position.y, baseY, ease);
+    parts.cape.rotation.x = THREE.MathUtils.lerp(parts.cape.rotation.x, 0.24, ease);
+    parts.capeInner.rotation.x = THREE.MathUtils.lerp(parts.capeInner.rotation.x, 0.18, ease);
+    parts.coatPanelL.rotation.z = THREE.MathUtils.lerp(parts.coatPanelL.rotation.z, 0, ease);
+    parts.coatPanelR.rotation.z = THREE.MathUtils.lerp(parts.coatPanelR.rotation.z, 0, ease);
+    parts.gem.rotation.y += dt * 0.5;
+    parts.gemShell.rotation.y -= dt * 0.3;
+    parts.gemRing.rotation.z += dt * 0.2;
   }
 }
 
@@ -1226,7 +1074,7 @@ function updatePlayer(dt) {
 }
 
 function updateCamera(dt) {
-  const targetY = firstPerson ? 1.62 : 1.45;
+  const targetY = firstPerson ? 1.68 : 1.52;
   const target = tmpVec.set(player.position.x, targetY, player.position.z);
   if (player) player.visible = !firstPerson;
 
@@ -1356,14 +1204,17 @@ export function initWorld3d() {
   sun.shadow.camera.bottom = -18;
   scene.add(sun);
 
-  player = buildPlayerModel(readAccent());
-  player.traverse((obj) => {
-    if (obj.isMesh) obj.castShadow = true;
-  });
+  const built = buildPlayerModel(readAccent());
+  player = built.group;
+  player.userData = {
+    accentMats: built.accentMats,
+    glow: built.glow,
+    walkParts: built.walkParts,
+  };
   scene.add(player);
 
   playerShadow = new THREE.Mesh(
-    new THREE.RingGeometry(0.2, 0.62, 32),
+    new THREE.RingGeometry(0.15, 0.68, 48),
     new THREE.MeshBasicMaterial({
       color: readAccent(),
       transparent: true,
