@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="UTOPIA — 最後の必要のあと。ブラウザで遊べるインタラクティブ・プロトタイプ。">
+  <title>UTOPIA — 最後の必要のあと</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <div class="starfield" aria-hidden="true"></div>
+
+    <header class="hud" id="hud" hidden>
+      <div class="hud-left">
+        <span class="hud-label">期</span>
+        <span id="hud-period">—</span>
+      </div>
+      <div class="hud-center">
+        <span id="hud-location">コモン・ガーデン</span>
+      </div>
+      <div class="hud-right">
+        <span class="hud-label">証言</span>
+        <span id="hud-trust">客人</span>
+      </div>
+    </header>
+
+    <main class="stage" id="stage">
+      <section class="panel narrative-panel" id="narrative-panel">
+        <p class="chapter-tag" id="chapter-tag"></p>
+        <h1 class="scene-title" id="scene-title"></h1>
+        <div class="scene-body" id="scene-body"></div>
+        <div class="scene-choices" id="scene-choices"></div>
+      </section>
+
+      <section class="panel system-panel" id="system-panel" hidden>
+        <div class="system-header">
+          <h2 id="system-title"></h2>
+          <p id="system-desc"></p>
+        </div>
+        <div id="system-content"></div>
+        <div class="system-actions" id="system-actions"></div>
+      </section>
+    </main>
+
+    <aside class="sidebar" id="sidebar" hidden>
+      <details open>
+        <summary>誓約</summary>
+        <ul id="vow-list"></ul>
+      </details>
+      <details open>
+        <summary>見送ったもの</summary>
+        <ul id="missed-list"></ul>
+      </details>
+    </aside>
+
+    <footer class="footer" id="footer">
+      <button type="button" class="btn btn-ghost" id="btn-restart" hidden>最初から</button>
+      <span class="footer-note">プロトタイプ — 約20分</span>
+    </footer>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
