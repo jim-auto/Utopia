@@ -46,6 +46,11 @@ import {
   getDeliberationReason as getEvent08Reason,
 } from "./covenant-event-08.js";
 import {
+  buildClauseForm as buildEvent09Form,
+  simulateEvent09,
+  getDeliberationReason as getEvent09Reason,
+} from "./covenant-event-09.js";
+import {
   buildClauseForm as buildEvent11Form,
   simulateEvent11,
   getDeliberationReason as getEvent11Reason,
@@ -59,6 +64,7 @@ import {
 import { mountAtelierImprov, getImprovDeliberationReason } from "./atelier-improv.js";
 import { mountForgeTryon } from "./forge-tryon.js";
 import { mountCoParentWeave } from "./co-parent-weave.js";
+import { mountArenaLife } from "./arena-life.js";
 
 const scenes = {};
 
@@ -83,11 +89,13 @@ export function createGame() {
     renderEvent06Covenant,
     renderEvent07Covenant,
     renderEvent08Covenant,
+    renderEvent09Covenant,
     renderEvent11Covenant,
     renderEvent12Covenant,
     renderAtelierImprov,
     renderForgeTryon,
     renderCoParentWeave,
+    renderArenaLife,
     renderDeliberation,
     renderEndingPicker,
     renderEpilogue: () => renderEpilogue(game),
@@ -423,6 +431,61 @@ export function createGame() {
     });
   }
 
+  function renderEvent09Covenant() {
+    const selected = new Set(["retireFree", "noLifetimeLock", "youthCap"]);
+
+    renderSystem({
+      title: "コヴナント事件 #09 — 競技の一生",
+      desc: "熟達の极致 × 他者への時間 × 引退の権利。一生を売らない。",
+      systemId: "covenant",
+      contentHtml: `<div id="event09-form">${buildEvent09Form(selected)}</div>`,
+      actions: [
+        {
+          label: "アトリエで試行を開始する（10年後に再訪）",
+          action: () => {
+            document.querySelectorAll("#event09-form input").forEach((input) => {
+              if (input.checked) state.flags[`ev09_${input.dataset.key}`] = true;
+            });
+            state.flags.ev09_done = true;
+            state.event09Sim = simulateEvent09(state);
+            if (state.flags.ev09_retireFree) bumpTrust(state, "soli", 2);
+            if (state.flags.ev09_youthCap) bumpTrust(state, "children", 1);
+            go("event09_revisit");
+          },
+        },
+      ],
+    });
+
+    document.getElementById("system-content").addEventListener("change", (e) => {
+      if (e.target.type === "checkbox") {
+        const key = e.target.dataset.key;
+        if (e.target.checked) selected.add(key);
+        else selected.delete(key);
+      }
+    });
+  }
+
+  function renderArenaLife() {
+    renderSystem({
+      title: "SYS-07 — 競技の一生",
+      desc: "アトリエの身体的実践。40年を熟達・他者・引退に配分——正解はない。",
+      systemId: "arenaLife",
+      contentHtml: `<div id="arena-life-root"></div>`,
+      actions: [],
+    });
+
+    mountArenaLife(document.getElementById("arena-life-root"), {
+      onComplete: (result) => {
+        state.arenaLifeResult = result;
+        state.flags.arena_life_done = true;
+        if (result.profile === "relational") bumpTrust(state, "soli", 1);
+        if (result.profile === "earlyRest") bumpTrust(state, "children", 1);
+        go("event09_life_result");
+      },
+      onSkip: () => renderEvent09Covenant(),
+    });
+  }
+
   function renderEvent11Covenant() {
     const selected = new Set(["multiParent", "childExitFamily", "renewContract"]);
 
@@ -674,6 +737,10 @@ export function createGame() {
       reasons.push(getEvent08Reason());
     }
 
+    if (state.flags.ev09_done) {
+      reasons.push(getEvent09Reason());
+    }
+
     if (state.flags.ev11_done) {
       reasons.push(getEvent11Reason());
     }
@@ -714,6 +781,7 @@ export function createGame() {
           ${state.flags.ev06_done ? `<span class="tag ${picked.has("io") ? "active" : ""}">切れる共有</span>` : ""}
           ${state.flags.ev07_done ? `<span class="tag ${picked.has("nagi") ? "active" : ""}">未命名の驚異</span>` : ""}
           ${state.flags.ev08_done ? `<span class="tag ${picked.has("child") ? "active" : ""}">試着と同意</span>` : ""}
+          ${state.flags.ev09_done ? `<span class="tag ${picked.has("soliArena") ? "active" : ""}">引退できる競技</span>` : ""}
           ${state.flags.ev11_done ? `<span class="tag ${picked.has("childGarden") ? "active" : ""}">選べる家族</span>` : ""}
           ${state.flags.ev12_done ? `<span class="tag ${picked.has("kaede") ? "active" : ""}">命令しない神</span>` : ""}
           ${state.flags.atelier_improv_done ? `<span class="tag ${picked.has("soli") ? "active" : ""}">一度きりの即興</span>` : ""}

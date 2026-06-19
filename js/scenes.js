@@ -22,6 +22,10 @@ import {
   getFeaturedQuote as getEvent08Quote,
 } from "./covenant-event-08.js";
 import {
+  renderOutcomeCards as renderEvent09Cards,
+  getFeaturedQuote as getEvent09Quote,
+} from "./covenant-event-09.js";
+import {
   renderOutcomeCards as renderEvent11Cards,
   getFeaturedQuote as getEvent11Quote,
 } from "./covenant-event-11.js";
@@ -42,11 +46,13 @@ export function getSceneHandlers(game) {
     renderEvent06Covenant,
     renderEvent07Covenant,
     renderEvent08Covenant,
+    renderEvent09Covenant,
     renderEvent11Covenant,
     renderEvent12Covenant,
     renderAtelierImprov,
     renderForgeTryon,
     renderCoParentWeave,
+    renderArenaLife,
     renderDeliberation,
     renderEndingPicker,
     renderEpilogue,
@@ -491,12 +497,95 @@ export function getSceneHandlers(game) {
             action: () => go("event08_intro"),
           },
           {
+            label: "アトリエ — 競技の一生（事件 #09）",
+            hint: "熟達の极致 × 他者への時間 × 引退の権利",
+            action: () => go("event09_intro"),
+          },
+          {
             label: "ホライズン — 出発憲章の試行（事件 #03）",
             hint: "未来人の同意を制度として組む",
             action: () => renderCovenant(),
           },
         ],
       }),
+
+    event09_intro: () =>
+      go({
+        chapter: "第三章",
+        title: "競技の一生",
+        body: `
+          <p>火星・アトリエ。ここでは、人々が一つの競技に人生を捧げる——それが美徳とも、暴力とも呼ばれる。</p>
+          ${state.flags.joinedConcert ? "<p>ソリの初演を見届けたあなたは、<em>終わりのある芸術</em>を知っている。競技にも、同じ問いが来る。</p>" : ""}
+          ${state.refusal === "immortality" ? "<p>あなたは<strong>永遠の生命</strong>を拒んだ。終わりのある競技が、ここでは前提になる。</p>" : ""}
+          ${say("soli", "極限の技は、独りよがりではない。誰かの時間を奪うな——引退も、技の一部だ。")}
+          ${say("child", "15歳より前に、一生を売らないで。")}
+          <p>3D空間で<strong>初演の舞台</strong>近くへ、<strong>E</strong>で調べてから、人生配分または条項へ。</p>
+        `,
+        period: 3,
+        location: "アトリエ",
+        mood: "mars",
+        art: "atelier",
+        speaker: "soli",
+        choices: [
+          {
+            label: "40年を配分する — 熟達・他者・引退（SYS-07）",
+            action: () => renderArenaLife(),
+          },
+          {
+            label: "配分せず — 条項だけ組む",
+            action: () => renderEvent09Covenant(),
+          },
+        ],
+      }),
+
+    event09_life_result: () => {
+      const r = state.arenaLifeResult;
+      go({
+        chapter: "第三章",
+        title: "競技の人生 — 配分のあと",
+        body: `
+          <p>人生ID <code>${r?.signature || "—"}</code></p>
+          <p class="sim-lead">${r?.lead || ""}</p>
+          ${say("soli", "終わりを選べる競技だけが、始められる。")}
+          <p>アトリエの条項を、これから組む。</p>
+        `,
+        location: "アトリエ",
+        mood: "mars",
+        art: "atelier",
+        speaker: "soli",
+        choices: [{ label: "コヴナント・グラマー — 競技共同体の条項を組む", action: () => renderEvent09Covenant() }],
+      });
+    },
+
+    event09_revisit: () => {
+      const sim = state.event09Sim || { summary: "", outcomes: [], tension: "medium" };
+      const quote = getEvent09Quote(sim);
+      go({
+        chapter: "第三章",
+        title: "競技の一生 — 十年後",
+        body: `
+          <p class="sim-lead">${sim.summary}</p>
+          ${renderEvent09Cards(sim.outcomes)}
+          <p>引退の権利、生涯契約の禁止、他者時間——条項は実行されたが、「例外申請」という抜け道も invent された。</p>
+          ${quote ? say(quote.npc, quote.quote) : ""}
+          <p>アトリエでの経験は、出発憲章にも影響を与えるだろう。</p>
+        `,
+        period: 3,
+        location: "アトリエ",
+        mood: sim.tension === "high" ? "vow" : "mars",
+        art: "atelier",
+        speaker: quote?.npc,
+        choices: [
+          {
+            label: "ホライズンへ — 出発憲章の試行を始める",
+            action: () => {
+              state.location = "ホライズン";
+              renderCovenant();
+            },
+          },
+        ],
+      });
+    },
 
     event08_intro: () =>
       go({
@@ -845,7 +934,7 @@ export function getSceneHandlers(game) {
         chapter: "第四章",
         title: "理由の地図",
         body: `
-          <p>あなたが提案した制度は、五年の試行を経た。${state.flags.ev12_done ? "モザイクの一年評価も、議題に加わる。" : ""}${state.flags.ev11_done ? " 共同親の試行も、議題に加わる。" : ""}支持者と反対者が、公共議会に集う。</p>
+          <p>あなたが提案した制度は、五年の試行を経た。${state.flags.ev12_done ? "モザイクの一年評価も、議題に加わる。" : ""}${state.flags.ev11_done ? " 共同親の試行も、議題に加わる。" : ""}${state.flags.ev09_done ? " 競技共同体の試行も、議題に加わる。" : ""}支持者と反対者が、公共議会に集う。</p>
           <p>ここでの勝利条件は全会一致ではない。<strong>安定した異議</strong>——反対者が賛成しなくても、負担が理解され、退出権が残り、意見が記録されれば、決定は正当になる。</p>
         `,
         period: 4,
